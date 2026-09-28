@@ -270,52 +270,6 @@
       font-family: var(--font-mono);
     }
 
-    .hud-key-area {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      max-width: 440px;
-    }
-
-    .hud-input-key {
-      flex: 1;
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      color: #e2e8f0;
-      padding: 9px 14px;
-      border-radius: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .hud-input-key:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 15px rgba(168, 85, 247, 0.35);
-    }
-
-    .btn-key-save {
-      background: rgba(168, 85, 247, 0.25);
-      border: 1px solid rgba(168, 85, 247, 0.5);
-      color: #e9d5ff;
-      padding: 9px 16px;
-      border-radius: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-
-    .btn-key-save:hover {
-      background: rgba(168, 85, 247, 0.45);
-      border-color: #c084fc;
-      box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
-    }
-
     /* REATOR / ORBE SCI-FI CENTRAL */
     .reactor-section {
       display: flex;
@@ -1158,27 +1112,6 @@
       transform: scale(0.98);
     }
 
-    .hud-input-key {
-      background: rgba(6, 3, 14, 0.75) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: var(--radius-sm) !important;
-      font-family: var(--font-mono) !important;
-      color: var(--txt) !important;
-      transition: all var(--dur) var(--ease) !important;
-    }
-
-    .hud-input-key:focus {
-      border-color: var(--accent) !important;
-      box-shadow: 0 0 20px rgba(34, 211, 238, 0.35) !important;
-    }
-
-    .btn-key-save {
-      border-radius: var(--radius-sm) !important;
-      font-family: var(--font-mono) !important;
-      letter-spacing: 0.08em;
-      transition: all var(--dur) var(--ease) !important;
-    }
-
     /* Status Badge */
     .hud-status-badge {
       background: rgba(18, 9, 32, 0.75) !important;
@@ -1996,10 +1929,6 @@
         </div>
       </div>
 
-      <div class="hud-key-area">
-        <input type="password" id="xai-key-input" class="hud-input-key" placeholder="Groq API Key (xai-...)" spellcheck="false" autocomplete="off" />
-        <button id="btn-save-key" class="btn-key-save">SALVAR CHAVE</button>
-      </div>
     </header>
 
     <!-- Seção do Reator Central -->
@@ -2152,21 +2081,13 @@
        CONSTANTES NO TOPO DO JS (PREENCHIDAS COM AS RESPOSTAS DA ENTREVISTA)
        ========================================================================== */
     /* ==========================================================================
-       CONFIGURAÇÃO DA API DA Groq (GROK)
+       COMUNICAÇÃO COM O BACKEND
        ==========================================================================
-       ⚠️ AVISO DE SEGURANÇA SOBRE API KEYS EM CÓDIGO FRONTEND:
-       Colocar sua chave de API diretamente em código frontend (client-side) NÃO é
-       seguro para aplicações em produção públicas, pois qualquer usuário pode
-       inspecionar o código-fonte no navegador (DevTools) e ver o seu token.
-       Em ambientes de produção, recomenda-se usar um servidor backend ou proxy
-       seguro que mantenha a chave em variáveis de ambiente (.env) no lado do servidor.
-
-       Para o TESTE LOCAL deste arquivo estático:
-       1. Você pode colar temporariamente sua chave na constante GROQ_API_KEY abaixo; OU
-       2. Colar no campo "Groq API Key" no topo da interface gráfica (salva localmente no localStorage).
+       A chave da Groq NÃO fica mais no frontend.
+       O navegador envia apenas a mensagem para o servidor (/api/chat).
+       O server.py mantém GROQ_API_KEY no ambiente do servidor e faz a
+       comunicação com a API da Groq.
        ========================================================================== */
-    const GROQ_API_KEY = ""; // Insira aqui temporariamente para testes locais se desejar (ex: "xai-...")
-
     const FISH_API_KEY = "COLE_SUA_FISH_AUDIO_API_KEY_AQUI";
     const FISH_VOICE_ID = "d9a100f6d45f43dea41bd0c160d7e578";
     const FISH_TTS_MODEL = "s2.1-pro-free";
@@ -2308,8 +2229,6 @@
     const screenActivation = document.getElementById("screen-activation");
     const btnActivateSystem = document.getElementById("btn-activate-system");
     const appContainer = document.getElementById("app-container");
-    const apiKeyInput = document.getElementById("xai-key-input");
-    const btnSaveKey = document.getElementById("btn-save-key");
     const hudStatus = document.getElementById("hud-status");
     const hudStatusText = document.getElementById("hud-status-text");
     const hudStatusIndicator = document.getElementById("hud-status-indicator");
@@ -2343,7 +2262,6 @@
     window.addEventListener("DOMContentLoaded", () => {
       // O boot visual não depende de API, microfone ou TTS.
       // Assim, uma falha de inicialização não prende a interface no boot.
-      try { loadStoredApiKey(); } catch (e) { console.error("JARVIS boot: chave:", e); }
       try { loadNotes(); } catch (e) { console.error("JARVIS boot: notas:", e); }
       try { initSpeechSynthesis(); } catch (e) { console.error("JARVIS boot: TTS:", e); }
       try { initSpeechRecognition(); } catch (e) { console.error("JARVIS boot: STT:", e); }
@@ -2386,37 +2304,6 @@
       });
 
       renderGraph();
-    });
-
-    /* ==========================================================================
-       GESTÃO DE CHAVE API Groq (LOCALSTORAGE & CONSTANTE LOCAL)
-       ========================================================================== */
-    function getEffectiveApiKey() {
-      if (typeof GROQ_API_KEY === "string" && GROQ_API_KEY.trim() !== "") {
-        return GROQ_API_KEY.trim();
-      }
-      return localStorage.getItem("groq_api_key") || (apiKeyInput ? apiKeyInput.value.trim() : "");
-    }
-
-    function loadStoredApiKey() {
-      if (typeof GROQ_API_KEY === "string" && GROQ_API_KEY.trim() !== "") {
-        if (apiKeyInput) apiKeyInput.value = GROQ_API_KEY.trim();
-        return;
-      }
-      const savedKey = localStorage.getItem("groq_api_key");
-      if (savedKey && apiKeyInput) {
-        apiKeyInput.value = savedKey;
-      }
-    }
-
-    btnSaveKey.addEventListener("click", () => {
-      const key = apiKeyInput.value.trim();
-      if (!key) {
-        showToast("Por favor, cole sua chave da Groq.");
-        return;
-      }
-      localStorage.setItem("groq_api_key", key);
-      showToast("Chave da Groq salva com sucesso!");
     });
 
     /* ==========================================================================
@@ -2708,18 +2595,12 @@
     });
 
     /* ==========================================================================
-       CÉREBRO (API OFICIAL DA Groq — GROQ)
+       CÉREBRO — BACKEND /api/chat
+       ==========================================================================
+       A chave da Groq permanece exclusivamente no server.py.
+       O frontend não envia Authorization nem acessa a GROQ_API_KEY.
        ========================================================================== */
     async function processUserCommand(commandText) {
-      const apiKey = getEffectiveApiKey();
-
-      if (!apiKey) {
-        const errorMsg = `Aviso: Por favor, configure sua chave da API da Groq no painel superior para ativar meus circuitos neurais, ${CONFIG.address}.`;
-        setDialogueText(null, errorMsg);
-        speakText(errorMsg);
-        return;
-      }
-
       isBusy = true;
       setOrbState("thinking");
       setHudStatus("PROCESSANDO...", "#eab308");
@@ -2727,48 +2608,33 @@
       // Registra mensagem do usuário no histórico da sessão
       sessionHistory.push({ role: "user", content: commandText });
 
-      const systemPrompt = buildSystemPrompt();
-
-      // Estrutura conceitual da requisição solicitada para a Groq
-      const payloadInput = [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        ...sessionHistory
-      ];
-
       try {
-        let rawReply = "";
-
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        const response = await fetch("/api/chat", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${apiKey}`,
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            model: CONFIG.model,
-            messages: payloadInput,
-            temperature: 0.7
+            message: commandText
           })
         });
 
+        const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          console.error("Erro Groq HTTP:", response.status, errData);
-          const errorSpeech = `Aviso: Falha na comunicação com os servidores da Groq. Verifique sua chave de acesso e permissões, ${CONFIG.address}.`;
+          console.error("Erro no backend /api/chat:", response.status, data);
+          const errorSpeech = data.error
+            ? `Aviso: ${data.error} ${CONFIG.address}.`
+            : `Aviso: Falha na comunicação com o servidor do JARVIS, ${CONFIG.address}.`;
           setDialogueText(null, errorSpeech);
           speakText(errorSpeech);
           return;
         }
 
-        const data = await response.json();
-        rawReply = extractAIText(data);
+        const rawReply = data.response || "";
 
         if (!rawReply) {
-          const emptySpeech = `Compreendido, ${CONFIG.address}. Nenhuma informação textual retornada pela Groq.`;
+          const emptySpeech = `Compreendido, ${CONFIG.address}. Nenhuma informação textual foi retornada pelo servidor.`;
           setDialogueText(null, emptySpeech);
           speakText(emptySpeech);
           return;
@@ -2776,32 +2642,40 @@
 
         // PROTOCOLO DE MEMÓRIA VIVA: detecta [[SAVE:area|titulo|texto]]
         const saveRegex = /\[\[SAVE:([a-z_]+)\|([^|]+)\|([\s\S]+?)\]\]/;
-        const match = rawReply.match(saveRegex);
-        let cleanReply = rawReply.replace(saveRegex, '').trim();
+        const saveMatch = rawReply.match(saveRegex);
 
-        // Adiciona a resposta original ao histórico da sessão
-        sessionHistory.push({ role: "assistant", content: rawReply });
+        let cleanReply = rawReply;
 
-        // Processa salvamento no Second Brain se detectado
-        let updatedNodeId = null;
-        if (match) {
-          const [, saveArea, saveTitle, saveBody] = match;
-          updatedNodeId = applyLivingMemory(saveArea.trim().toLowerCase(), saveTitle.trim(), saveBody.trim());
+        if (saveMatch) {
+          const [, area, title, body] = saveMatch;
+          saveNoteFromAI(area, title, body);
+          cleanReply = rawReply.replace(saveRegex, "").trim();
         }
 
-        // Exibe e sintetiza a fala SEM a tag [[SAVE:...]]
+        sessionHistory.push({ role: "assistant", content: cleanReply });
+
         setDialogueText(null, cleanReply);
+        setHudStatus("ONLINE", "#10b981");
+        setOrbState("speaking");
+
         speakText(cleanReply, () => {
-          if (updatedNodeId) {
-            flashNodeInGraph(updatedNodeId);
+          if (isSystemActive) {
+            setOrbState("idle");
+            setHudStatus("OCIOSO", "#c084fc");
           }
         });
 
       } catch (err) {
-        console.error("Falha de rede ou conexão com Groq:", err);
-        const netErrSpeech = `Não foi possível estabelecer conexão com o centro de dados da Groq, ${CONFIG.address}. Verifique sua conectividade.`;
+        console.error("Falha de rede ao comunicar com /api/chat:", err);
+        const netErrSpeech = `Não foi possível estabelecer conexão com o servidor do JARVIS, ${CONFIG.address}. Verifique se o server.py está em execução.`;
         setDialogueText(null, netErrSpeech);
         speakText(netErrSpeech);
+      } finally {
+        isBusy = false;
+        if (!speechJarvisText.textContent) {
+          setOrbState("idle");
+          setHudStatus("OCIOSO", "#c084fc");
+        }
       }
     }
 
