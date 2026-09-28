@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS — Sistema de Inteligência & Second Brain</title>
+  <style>
+    /* ==========================================================================
+       RESET & BASE SCI-FI THEME (PURPLE / ROXO REATOR)
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-deep: #06030c;
+      --bg-panel: rgba(18, 10, 32, 0.7);
+      --bg-panel-border: rgba(168, 85, 247, 0.25);
+      --primary: #a855f7;
+      --primary-glow: rgba(168, 85, 247, 0.45);
+      --primary-bright: #c084fc;
+      --primary-dark: #6b21a8;
+      --accent-cyan: #22d3ee;
+      --accent-green: #10b981;
+      --accent-orange: #f97316;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(147, 51, 234, 0.18) 0%, transparent 60%),
+        radial-gradient(circle at 10% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 45%),
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-deep);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(168, 85, 247, 0.3);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(168, 85, 247, 0.6);
+    }
+
+    /* ==========================================================================
+       TELA 1: BOOT (SINCRONIZAÇÃO)
+       ========================================================================== */
+    #screen-boot {
+      position: fixed;
+      inset: 0;
+      background: #040208;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #screen-boot.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .boot-brand {
+      font-family: var(--font-mono);
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: 0.35em;
+      text-indent: 0.35em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #e9d5ff 0%, #a855f7 45%, #6366f1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 35px rgba(168, 85, 247, 0.5));
+      margin-bottom: 20px;
+    }
+
+    .boot-line {
+      width: min(85vw, 480px);
+      height: 1px;
+      border: 0;
+      background: linear-gradient(90deg, transparent 0%, #a855f7 50%, transparent 100%);
+      margin-bottom: 30px;
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.8);
+    }
+
+    .boot-status {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      letter-spacing: 0.28em;
+      color: #c084fc;
+      animation: blinkText 1.1s ease-in-out infinite alternate;
+      text-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
+    }
+
+    .boot-version {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      color: var(--text-dim);
+      margin-top: 25px;
+    }
+
+    @keyframes blinkText {
+      0% { opacity: 0.3; transform: scale(0.98); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ==========================================================================
+       TELA 2: ATIVAÇÃO (CLIQUE DO USUÁRIO)
+       ========================================================================== */
+    #screen-activation {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 2, 8, 0.96);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 900;
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+
+    #screen-activation.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .activation-box {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .btn-activate {
+      position: relative;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(99, 102, 241, 0.15) 100%);
+      border: 1px solid rgba(168, 85, 247, 0.6);
+      color: #f3e8ff;
+      padding: 18px 46px;
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.35), inset 0 0 15px rgba(168, 85, 247, 0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-activate:hover {
+      transform: translateY(-2px) scale(1.03);
+      border-color: #c084fc;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.45) 0%, rgba(99, 102, 241, 0.3) 100%);
+      box-shadow: 0 0 45px rgba(168, 85, 247, 0.65), inset 0 0 20px rgba(168, 85, 247, 0.4);
+    }
+
+    .btn-activate:active {
+      transform: scale(0.98);
+    }
+
+    .activation-sub {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.3em;
+      color: var(--text-dim);
+      animation: pulseSub 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseSub {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.9; }
+    }
+
+    /* ==========================================================================
+       APLICAÇÃO PRINCIPAL (APP CONTAINER)
+       ========================================================================== */
+    #app-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    #app-container.visible {
+      opacity: 1;
+    }
+
+    /* HUD Topbar */
+    .hud-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 16px 24px;
+      background: var(--bg-panel);
+      border: 1px solid var(--bg-panel-border);
+      border-radius: 14px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .hud-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .hud-pulse-dot {
+      width: 12px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 14px var(--primary);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+    }
+
+    .hud-title {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: #f1f5f9;
+    }
+
+    .hud-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .hud-key-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 440px;
+    }
+
+    .hud-input-key {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      color: #e2e8f0;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .hud-input-key:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.35);
+    }
+
+    .btn-key-save {
+      background: rgba(168, 85, 247, 0.25);
+      border: 1px solid rgba(168, 85, 247, 0.5);
+      color: #e9d5ff;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-key-save:hover {
+      background: rgba(168, 85, 247, 0.45);
+      border-color: #c084fc;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+    }
+
+    /* REATOR / ORBE SCI-FI CENTRAL */
+    .reactor-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      padding: 30px 20px 20px;
+    }
+
+    .orb-wrapper {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 24px;
+    }
+
+    /* Anéis Concêntricos Externos */
+    .orb-ring-outer {
+      position: absolute;
+      inset: -20px;
+      border: 1px dashed rgba(168, 85, 247, 0.25);
+      border-radius: 50%;
+      animation: rotateSlow 30s linear infinite;
+    }
+
+    .orb-ring-middle {
+      position: absolute;
+      inset: -8px;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      animation: rotateReverse 18s linear infinite;
+    }
+
+    @keyframes rotateSlow {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes rotateReverse {
+      to { transform: rotate(-360deg); }
+    }
+
+    /* Orbe Central */
+    .orb-core {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #e9d5ff 0%, #a855f7 40%, #581c87 80%, #2e1065 100%);
+      box-shadow: 
+        0 0 40px rgba(168, 85, 247, 0.5),
+        inset 0 0 30px rgba(255, 255, 255, 0.4),
+        inset -10px -10px 25px rgba(0, 0, 0, 0.7);
+      transition: all 0.4s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .orb-core::after {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      filter: blur(1px);
+    }
+
+    /* Ondas de som / listening / talking ripples */
+    .orb-ripple {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Estados do Orbe */
+    /* 1. Ocioso: pulso lento */
+    .orb-wrapper.state-idle .orb-core {
+      animation: orbPulseIdle 4.5s ease-in-out infinite;
+    }
+    @keyframes orbPulseIdle {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 35px rgba(168, 85, 247, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 55px rgba(168, 85, 247, 0.7); }
+    }
+
+    /* 2. Ouvindo: ondas concêntricas */
+    .orb-wrapper.state-listening .orb-core {
+      background: radial-gradient(circle at 35% 35%, #cffafe 0%, #22d3ee 40%, #0891b2 80%, #164e63 100%);
+      box-shadow: 0 0 50px rgba(34, 211, 238, 0.6);
+      animation: orbListen 1.5s ease-in-out infinite;
+    }
+    .orb-wrapper.state-listening .orb-ripple {
+      border-color: #22d3ee;
+      animation: rippleExpand 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+    @keyframes orbListen {
+      0%, 100% { transform: scale(1.02); }
+      50% { transform: scale(1.12); }
+    }
+    @keyframes rippleExpand {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* 3. Pensando: pulso rápido */
+    .orb-wrapper.state-thinking .orb-core {
+      background: radial-gradient(circle at 35% 35%, #fef08a 0%, #eab308 40%, #854d0e 80%, #422006 100%);
+      box-shadow: 0 0 60px rgba(234, 179, 8, 0.75);
+      animation: orbThinking 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes orbThinking {
+      0% { transform: scale(0.95); }
+      100% { transform: scale(1.14); }
+    }
+
+    /* 4. Falando: ondas suaves */
+    .orb-wrapper.state-speaking .orb-core {
+      background: radial-gradient(circle at 35% 35%, #fbcfe8 0%, #ec4899 40%, #9d174d 80%, #500724 100%);
+      box-shadow: 0 0 55px rgba(236, 72, 153, 0.7);
+      animation: orbSpeak 1.1s ease-in-out infinite;
+    }
+    .orb-wrapper.state-speaking .orb-ripple {
+      border-color: #ec4899;
+      animation: rippleExpand 2s cubic-bezier(0, 0.2, 0.8, 1) infinite 0.4s;
+    }
+    @keyframes orbSpeak {
+      0%, 100% { transform: scale(1.03); }
+      50% { transform: scale(1.15); }
+    }
+
+    /* Status e Feedback de Diálogo */
+    .hud-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.15em;
+      color: #c084fc;
+      margin-bottom: 20px;
+    }
+
+    .dialogue-box {
+      width: 100%;
+      max-width: 780px;
+      background: var(--bg-panel);
+      border: 1px solid var(--bg-panel-border);
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .dialogue-line {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .dialogue-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dialogue-label.user {
+      color: #38bdf8;
+    }
+
+    .dialogue-label.assistant {
+      color: #c084fc;
+    }
+
+    .dialogue-text {
+      font-size: 1.02rem;
+      color: #f1f5f9;
+      min-height: 1.5em;
+      word-break: break-word;
+      transition: color 0.3s;
+    }
+
+    .dialogue-text.empty {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    /* Controles de Entrada (Texto & Botões de Voz) */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 780px;
+      margin-top: 14px;
+    }
+
+    .input-text-command {
+      flex: 1;
+      background: rgba(18, 10, 32, 0.7);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #f8fafc;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      outline: none;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s;
+    }
+
+    .input-text-command:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-action-icon {
+      background: rgba(168, 85, 247, 0.18);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-action-icon:hover {
+      background: rgba(168, 85, 247, 0.38);
+      border-color: #c084fc;
+      transform: translateY(-2px);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.45);
+    }
+
+    .btn-action-icon.danger {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .btn-action-icon.danger:hover {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: #f87171;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.45);
+    }
+
+    /* ==========================================================================
+       SECOND BRAIN — GRAFO NEURAL ANIMADO
+       ========================================================================== */
+    .brain-section {
+      background: var(--bg-panel);
+      border: 1px solid var(--bg-panel-border);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .brain-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+      padding-bottom: 14px;
+    }
+
+    .brain-title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .brain-title {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brain-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .brain-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brain-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.12);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-brain-tool {
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+      padding: 7px 15px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-brain-tool:hover {
+      background: rgba(168, 85, 247, 0.4);
+      border-color: #c084fc;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+    }
+
+    /* Container do SVG Neural */
+    #graph-container {
+      width: 100%;
+      height: 520px;
+      background: radial-gradient(circle at 50% 50%, rgba(26, 11, 46, 0.7) 0%, rgba(10, 4, 18, 0.95) 100%);
+      border-radius: 14px;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    #graph-container svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Animação das Arestas com dashoffset */
+    .neural-edge {
+      stroke-dasharray: 6 5;
+      animation: dashStream 16s linear infinite;
+    }
+    @keyframes dashStream {
+      from { stroke-dashoffset: 200; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Nós Interativos */
+    .node-group {
+      cursor: pointer;
+      transition: transform 0.25s ease;
+    }
+    .node-group:hover {
+      filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.7));
+    }
+    .node-group:hover .node-circle {
+      transform: scale(1.15);
+    }
+
+    /* Respiração do Nó (Breathing ring) */
+    .breathing-ring {
+      animation: nodeBreathe 3.5s ease-in-out infinite;
+      transform-origin: center;
+      pointer-events: none;
+    }
+    @keyframes nodeBreathe {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 0.75; transform: scale(1.22); }
+    }
+
+    /* Piscar nó recém-salvo */
+    .node-flash {
+      animation: flashNode 0.5s ease-in-out 3;
+    }
+    @keyframes flashNode {
+      0%, 100% { fill-opacity: 0.85; filter: drop-shadow(0 0 8px var(--primary)); }
+      50% { fill-opacity: 1; fill: #ffffff !important; filter: drop-shadow(0 0 25px #ffffff); }
+    }
+
+    /* Legenda */
+    .brain-legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      padding-top: 10px;
+    }
+
+    .legend-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-verified {
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+       MODAL DE EDIÇÃO / CRIAÇÃO DE NOTAS
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 1, 6, 0.8);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 520px;
+      background: #0f081d;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.25);
+      border-radius: 18px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .modal-title {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 0;
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .modal-close:hover { color: #f8fafc; }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .modal-label {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .modal-input, .modal-select, .modal-textarea {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #f8fafc;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .modal-input:focus, .modal-select:focus, .modal-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .modal-textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-save-note {
+      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(168, 85, 247, 0.4);
+    }
+    .btn-save-note:hover {
+      box-shadow: 0 0 26px rgba(168, 85, 247, 0.7);
+    }
+
+    .btn-delete-note {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-delete-note:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Notificação Toast */
+    #toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(20, 10, 36, 0.95);
+      border: 1px solid var(--primary);
+      color: #f8fafc;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(168, 85, 247, 0.35);
+      z-index: 1500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    #toast-msg.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      #graph-container {
+        height: 440px;
+      }
+      .hud-topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .hud-key-area {
+        max-width: 100%;
+      }
+      .controls-bar {
+        flex-wrap: wrap;
+      }
+      .btn-action-icon {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================================
+       TELA 1 — BOOT (INICIALIZAÇÃO AUTOMÁTICA)
+       ====================================================================== -->
+  <div id="screen-boot">
+    <div class="boot-brand">JARVIS</div>
+    <hr class="boot-line">
+    <div class="boot-status">SINCRONIZANDO DADOS...</div>
+    <div class="boot-version">v5.0 · REBUILD</div>
+  </div>
+
+  <!-- ======================================================================
+       TELA 2 — ATIVAÇÃO (GESTO DE LIBERAÇÃO DE ÁUDIO / MIC)
+       ====================================================================== -->
+  <div id="screen-activation" class="hidden">
+    <div class="activation-box">
+      <div class="boot-brand" style="margin-bottom:0;">JARVIS</div>
+      <button id="btn-activate-system" class="btn-activate">
+        <span>► ATIVAR SISTEMA</span>
+      </button>
+      <div class="activation-sub">CLIQUE PARA INICIAR</div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       APLICAÇÃO PRINCIPAL
+       ====================================================================== -->
+  <div id="app-container">
+
+    <!-- Topbar HUD -->
+    <header class="hud-topbar">
+      <div class="hud-identity">
+        <div class="hud-pulse-dot"></div>
+        <div>
+          <div class="hud-title">JARVIS MK-V</div>
+          <div class="hud-subtitle">MANDATÁRIO & SECOND BRAIN NEURAL</div>
+        </div>
+      </div>
+
+      <div class="hud-key-area">
+        <input type="password" id="anthropic-key-input" class="hud-input-key" placeholder="Anthropic API Key (sk-ant-...)" spellcheck="false" autocomplete="off" />
+        <button id="btn-save-key" class="btn-key-save">SALVAR CHAVE</button>
+      </div>
+    </header>
+
+    <!-- Seção do Reator Central -->
+    <section class="reactor-section">
+      <!-- Status Badge -->
+      <div id="hud-status" class="hud-status-badge">
+        <span id="hud-status-indicator" style="width:7px; height:7px; border-radius:50%; background:#c084fc;"></span>
+        <span id="hud-status-text">OCIOSO</span>
+      </div>
+
+      <!-- Orbe / Esfera Reator -->
+      <div id="reactor-orb" class="orb-wrapper state-idle" title="Clique para ativar a escuta de voz">
+        <div class="orb-ring-outer"></div>
+        <div class="orb-ring-middle"></div>
+        <div class="orb-ripple"></div>
+        <div class="orb-core">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(255,255,255,0.8));">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Linhas de Diálogo HUD -->
+      <div class="dialogue-box">
+        <div class="dialogue-line">
+          <div class="dialogue-label user">
+            <span>●</span> VOCÊ
+          </div>
+          <div id="speech-user-text" class="dialogue-text empty">Aguardando comando de voz ou texto...</div>
+        </div>
+
+        <div class="dialogue-line">
+          <div class="dialogue-label assistant">
+            <span>◆</span> JARVIS
+          </div>
+          <div id="speech-jarvis-text" class="dialogue-text">Sistemas prontos. Às suas ordens, senhor.</div>
+        </div>
+      </div>
+
+      <!-- Barra de Controle de Comandos -->
+      <div class="controls-bar">
+        <input type="text" id="text-command-input" class="input-text-command" placeholder="Ou digite sua ordem e tecle Enter..." autocomplete="off" />
+        
+        <button id="btn-toggle-mic" class="btn-action-icon" title="Ativar microfone">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+        </button>
+
+        <button id="btn-stop-speech" class="btn-action-icon danger" title="Interromper fala do Jarvis">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="14" height="14" x="5" y="5" rx="2"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECOND BRAIN — GRAFO NEURAL ANIMADO
+         ====================================================================== -->
+    <section class="brain-section">
+      <div class="brain-header">
+        <div class="brain-title-box">
+          <div class="brain-title">
+            <span>🧠</span> SECOND BRAIN · GRAFO NEURAL VIVO
+          </div>
+          <div class="brain-subtitle">Conexões sinápticas com injeção contextual em tempo real</div>
+        </div>
+
+        <div class="brain-actions">
+          <div id="brain-counter-badge" class="brain-counter">0 notas · 0 áreas</div>
+          <button id="btn-add-note" class="btn-brain-tool">+ NOVA NOTA</button>
+          <button id="btn-reset-brain" class="btn-brain-tool" title="Restaurar notas originais">↻ REINICIAR</button>
+        </div>
+      </div>
+
+      <!-- Container do SVG Neural -->
+      <div id="graph-container">
+        <!-- SVG injetado via JS -->
+      </div>
+
+      <!-- Legenda das Áreas Presentes -->
+      <div class="brain-legend">
+        <div id="legend-chips-container" class="legend-chips">
+          <!-- Chips gerados dinamicamente -->
+        </div>
+        <div class="legend-verified">
+          ✓ contexto injetado em todos os comandos do Jarvis
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ======================================================================
+       MODAL DE CRIAÇÃO / EDIÇÃO DE NOTAS
+       ====================================================================== -->
+  <div id="modal-note" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span id="modal-heading">EDITAR NOTA NEURAL</span>
+        <button id="btn-close-modal" class="modal-close">&times;</button>
+      </div>
+
+      <input type="hidden" id="modal-note-id" />
+
+      <div class="modal-field">
+        <label class="modal-label" for="modal-input-title">TÍTULO (1 A 2 PALAVRAS)</label>
+        <input type="text" id="modal-input-title" class="modal-input" placeholder="Ex: Metas Rápidas" />
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label" for="modal-select-area">ÁREA DE CONHECIMENTO</label>
+        <select id="modal-select-area" class="modal-select">
+          <option value="metas">Metas</option>
+          <option value="trabalho">Carreira</option>
+          <option value="projetos">Projetos</option>
+          <option value="financas">Finanças</option>
+          <option value="aprendizado">Aprendizado</option>
+          <option value="saude">Saúde</option>
+          <option value="relacoes">Relações</option>
+          <option value="meta">Perfil (Sobre Você)</option>
+        </select>
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label" for="modal-textarea-body">CONTEÚDO DA NOTA</label>
+        <textarea id="modal-textarea-body" class="modal-textarea" placeholder="Descreva os fatos e contextos relevantes..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-delete-current-note" class="btn-delete-note">EXCLUIR NOTA</button>
+        <button id="btn-save-current-note" class="btn-save-note">SALVAR ALTERAÇÕES</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-msg">Notificação do sistema</div>
+
+  <!-- ======================================================================
+       JAVASCRIPT EMBUTIDO (SEM LIBS, PURO E AUTOCONTIDO)
+       ====================================================================== -->
+  <script>
+    /* ==========================================================================
+       CONSTANTES NO TOPO DO JS (PREENCHIDAS COM AS RESPOSTAS DA ENTREVISTA)
+       ========================================================================== */
+    const CONFIG = {
+      name: "Jarvis",
+      address: "senhor",
+      themeColor: "#a855f7",
+      persona: "formal britânico (mordomo britânico requintado, impecavelmente cortês, prestativo, solene e pontual)",
+      wakeWord: "ola jarvis",
+      voiceGender: "masculina",
+      model: "claude-sonnet-5"
+    };
+
+    const AREA = {
+      metas: { label: "Metas", color: "#fbbf24" },
+      trabalho: { label: "Carreira", color: "#ff5547" },
+      projetos: { label: "Projetos", color: "#8b7cff" },
+      financas: { label: "Finanças", color: "#f7931a" },
+      aprendizado: { label: "Aprendizado", color: "#2dd4ff" },
+      saude: { label: "Saúde", color: "#10b981" },
+      relacoes: { label: "Relações", color: "#ec4899" },
+      meta: { label: "Perfil", color: "#8a90a6" }
+    };
+
+    const INITIAL_NOTES = [
+      {
+        id: "perfil",
+        area: "meta",
+        title: "Perfil",
+        body: "27 anos (nascido em 31/03/1999 em Pariquera-Açu/SP), reside no Alto Boqueirão em Curitiba/PR. Formado em Técnico em Mecatrônica pelo SENAI e acadêmico no 1º período de Ciência da Computação. Gosta de jogos com amigos, músicas, filmes de terror/ação e séries. Reservado e sociável."
+      },
+      {
+        id: "metas_curto",
+        area: "metas",
+        title: "Metas Rápidas",
+        body: "Curto prazo (3-6 meses): Ingressar no mercado de programação, vender o apartamento, se organizar financeiramente e aprimorar o desempenho geral."
+      },
+      {
+        id: "metas_longo",
+        area: "metas",
+        title: "Rumo a Lisboa",
+        body: "Longo prazo (1-3 anos): Morar em Lisboa (Portugal) com a namorada Ana, atuar profissionalmente na área de programação, empreender e desenvolver aplicativos próprios."
+      },
+      {
+        id: "carreira",
+        area: "trabalho",
+        title: "Carreira Dev",
+        body: "Atualmente desempregado em busca ativa e focada de oportunidades na área de programação e desenvolvimento de software."
+      },
+      {
+        id: "proj_jarvis",
+        area: "projetos",
+        title: "Jarvis",
+        body: "Desenvolvimento do assistente pessoal inteligente com Second Brain, integração à API do Claude e interface de voz contínua."
+      },
+      {
+        id: "proj_resenha",
+        area: "projetos",
+        title: "Resenha App",
+        body: "Projeto e aplicativo voltado para o agendamento, gestão e organização de eventos e partidas esportivas."
+      },
+      {
+        id: "financas",
+        area: "financas",
+        title: "Finanças",
+        body: "Possui pequena reserva de auxílio financeiro; prioridade em quitar dívidas pendentes e, a longo prazo, investir para obter renda extra e liberdade criativa."
+      },
+      {
+        id: "aprend_java",
+        area: "aprendizado",
+        title: "Java e Spring",
+        body: "Foco no desenvolvimento avançado em Java e Spring Boot para atender às demandas de mercado e conquistar vaga sólida em tecnologia."
+      },
+      {
+        id: "aprend_cc",
+        area: "aprendizado",
+        title: "Ciência da Comp",
+        body: "Cursando 1º período de Ciência da Computação; meta de retomar a leitura dos livros de Arquitetura Limpa e fundamentos da computação."
+      },
+      {
+        id: "saude",
+        area: "saude",
+        title: "Saúde e Rotina",
+        body: "Tenta dormir 8 horas diárias; necessita aprimorar a alimentação por ficar em casa e voltar a praticar exercícios físicos regulares."
+      },
+      {
+        id: "rel_ana",
+        area: "relacoes",
+        title: "Namorada Ana",
+        body: "Namorada que mora em Portugal; a quem o Jarvis também prestará reverência e assistência no futuro após a mudança para Lisboa."
+      },
+      {
+        id: "rel_familia",
+        area: "relacoes",
+        title: "Família",
+        body: "Mora em Curitiba com o pai, a madrasta (segunda mãe) e dois irmãos; irmão mais velho reside em Itajaí/SC; mãe reside em São José dos Pinhais/PR."
+      }
+    ];
+
+    const REL = [
+      ["metas_curto", "carreira"],
+      ["metas_curto", "financas"],
+      ["metas_curto", "perfil"],
+      ["metas_curto", "aprend_java"],
+      ["metas_longo", "rel_ana"],
+      ["metas_longo", "metas_curto"],
+      ["metas_longo", "carreira"],
+      ["metas_longo", "proj_resenha"],
+      ["metas_longo", "proj_jarvis"],
+      ["carreira", "aprend_java"],
+      ["carreira", "aprend_cc"],
+      ["carreira", "proj_jarvis"],
+      ["carreira", "proj_resenha"],
+      ["proj_jarvis", "proj_resenha"],
+      ["proj_jarvis", "aprend_cc"],
+      ["proj_resenha", "aprend_java"],
+      ["financas", "carreira"],
+      ["saude", "perfil"],
+      ["rel_familia", "perfil"],
+      ["rel_ana", "perfil"],
+      ["aprend_cc", "aprend_java"]
+    ];
+
+    /* ==========================================================================
+       ESTADO GLOBAL DA APLICAÇÃO
+       ========================================================================== */
+    let currentNotes = [];
+    let sessionHistory = [];
+    let recognition = null;
+    let isSystemActive = false;
+    let isBusy = false; // Flag para impedir que o assistente se ouça
+    let isUserListeningToggled = false;
+    let currentVoice = null;
+    let synapseAnimationId = null;
+
+    // Elementos DOM
+    const screenBoot = document.getElementById("screen-boot");
+    const screenActivation = document.getElementById("screen-activation");
+    const btnActivateSystem = document.getElementById("btn-activate-system");
+    const appContainer = document.getElementById("app-container");
+    const apiKeyInput = document.getElementById("anthropic-key-input");
+    const btnSaveKey = document.getElementById("btn-save-key");
+    const hudStatus = document.getElementById("hud-status");
+    const hudStatusText = document.getElementById("hud-status-text");
+    const hudStatusIndicator = document.getElementById("hud-status-indicator");
+    const reactorOrb = document.getElementById("reactor-orb");
+    const speechUserText = document.getElementById("speech-user-text");
+    const speechJarvisText = document.getElementById("speech-jarvis-text");
+    const textCommandInput = document.getElementById("text-command-input");
+    const btnToggleMic = document.getElementById("btn-toggle-mic");
+    const btnStopSpeech = document.getElementById("btn-stop-speech");
+    const graphContainer = document.getElementById("graph-container");
+    const brainCounterBadge = document.getElementById("brain-counter-badge");
+    const legendChipsContainer = document.getElementById("legend-chips-container");
+    const btnAddNote = document.getElementById("btn-add-note");
+    const btnResetBrain = document.getElementById("btn-reset-brain");
+    const toastMsg = document.getElementById("toast-msg");
+
+    // Modal DOM
+    const modalNote = document.getElementById("modal-note");
+    const modalHeading = document.getElementById("modal-heading");
+    const modalNoteId = document.getElementById("modal-note-id");
+    const modalInputTitle = document.getElementById("modal-input-title");
+    const modalSelectArea = document.getElementById("modal-select-area");
+    const modalTextareaBody = document.getElementById("modal-textarea-body");
+    const btnCloseModal = document.getElementById("btn-close-modal");
+    const btnSaveCurrentNote = document.getElementById("btn-save-current-note");
+    const btnDeleteCurrentNote = document.getElementById("btn-delete-current-note");
+
+    /* ==========================================================================
+       INICIALIZAÇÃO & FLUXO DE TELAS (BOOT -> ATIVAÇÃO -> APP)
+       ========================================================================== */
+    window.addEventListener("DOMContentLoaded", () => {
+      loadStoredApiKey();
+      loadNotes();
+      initSpeechSynthesis();
+      initSpeechRecognition();
+
+      // Transição automática: Tela 1 (Boot) para Tela 2 (Ativação) após ~2.2s
+      setTimeout(() => {
+        screenBoot.classList.add("hidden");
+        screenActivation.classList.remove("hidden");
+      }, 2200);
+    });
+
+    // Clique em ► ATIVAR SISTEMA (Gesto de desbloqueio para Áudio + Mic)
+    btnActivateSystem.addEventListener("click", () => {
+      screenActivation.classList.add("hidden");
+      appContainer.classList.add("visible");
+      isSystemActive = true;
+
+      // Saudação em voz alta e início de escuta imediata
+      const greeting = `Sistemas online. Estou ouvindo, ${CONFIG.address}.`;
+      setDialogueText(null, greeting);
+      speakText(greeting, () => {
+        startListening();
+      });
+
+      renderGraph();
+    });
+
+    /* ==========================================================================
+       GESTÃO DE CHAVE API (LOCALSTORAGE)
+       ========================================================================== */
+    function loadStoredApiKey() {
+      const savedKey = localStorage.getItem("anthropic_key");
+      if (savedKey) {
+        apiKeyInput.value = savedKey;
+      }
+    }
+
+    btnSaveKey.addEventListener("click", () => {
+      const key = apiKeyInput.value.trim();
+      if (!key) {
+        showToast("Por favor, cole sua chave Anthropic.");
+        return;
+      }
+      localStorage.setItem("anthropic_key", key);
+      showToast("Chave Anthropic salva com sucesso!");
+    });
+
+    /* ==========================================================================
+       NOTAS & PERSISTÊNCIA (SECOND BRAIN)
+       ========================================================================== */
+    function loadNotes() {
+      const stored = localStorage.getItem("jarvis_notes");
+      if (stored) {
+        try {
+          currentNotes = JSON.parse(stored);
+        } catch (e) {
+          currentNotes = [...INITIAL_NOTES];
+        }
+      } else {
+        currentNotes = [...INITIAL_NOTES];
+        saveNotesToStorage();
+      }
+    }
+
+    function saveNotesToStorage() {
+      localStorage.setItem("jarvis_notes", JSON.stringify(currentNotes));
+      updateBrainStats();
+    }
+
+    btnResetBrain.addEventListener("click", () => {
+      if (confirm("Deseja restaurar as notas iniciais do Second Brain?")) {
+        currentNotes = JSON.parse(JSON.stringify(INITIAL_NOTES));
+        saveNotesToStorage();
+        renderGraph();
+        showToast("Second Brain restaurado aos valores padrão.");
+      }
+    });
+
+    function updateBrainStats() {
+      const totalNotes = currentNotes.length;
+      const uniqueAreas = new Set(currentNotes.map(n => n.area)).size;
+      brainCounterBadge.textContent = `${totalNotes} notas · ${uniqueAreas} áreas`;
+
+      // Atualiza legenda
+      legendChipsContainer.innerHTML = "";
+      const presentAreas = Array.from(new Set(currentNotes.map(n => n.area)));
+      presentAreas.forEach(areaKey => {
+        const meta = AREA[areaKey] || { label: areaKey, color: "#8a90a6" };
+        const chip = document.createElement("div");
+        chip.className = "legend-chip";
+        chip.innerHTML = `<span class="legend-dot" style="background:${meta.color}; box-shadow:0 0 8px ${meta.color};"></span><span>${meta.label}</span>`;
+        legendChipsContainer.appendChild(chip);
+      });
+    }
+
+    /* ==========================================================================
+       VOZ NATIVA: TTS (SÍNTESE) & STT (RECONHECIMENTO CONTÍNUO)
+       ========================================================================== */
+    function initSpeechSynthesis() {
+      if (!('speechSynthesis' in window)) return;
+      const updateVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const ptVoices = voices.filter(v => v.lang.startsWith("pt"));
+        // Escolha de voz preferencialmente masculina
+        currentVoice = ptVoices.find(v => /felipe|daniel|ricardo|male|homem|google português/i.test(v.name)) 
+                    || ptVoices.find(v => !/maria|luciana|female|mulher|vitória|helena/i.test(v.name)) 
+                    || ptVoices[0];
+      };
+      updateVoices();
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+
+    function speakText(text, onComplete) {
+      if (!('speechSynthesis' in window)) {
+        if (onComplete) onComplete();
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      isBusy = true; // IMPEDE O ASSISTENTE DE SE OUVIR
+      setOrbState("speaking");
+      setHudStatus("FALANDO...", "#ec4899");
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "pt-BR";
+      utterance.rate = 1.04;
+      utterance.pitch = 0.95; // Tom sóbrio e solene (masculino)
+
+      if (currentVoice) {
+        utterance.voice = currentVoice;
+      }
+
+      utterance.onend = () => {
+        isBusy = false;
+        setOrbState("listening");
+        setHudStatus("ESCUTANDO...", "#22d3ee");
+        if (onComplete) onComplete();
+        restartListeningSafely();
+      };
+
+      utterance.onerror = () => {
+        isBusy = false;
+        setOrbState("idle");
+        setHudStatus("OCIOSO", "#c084fc");
+        if (onComplete) onComplete();
+        restartListeningSafely();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function stopSpeaking() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      isBusy = false;
+      setOrbState("idle");
+      setHudStatus("OCIOSO", "#c084fc");
+      showToast("Fala interrompida.");
+      restartListeningSafely();
+    }
+
+    btnStopSpeech.addEventListener("click", stopSpeaking);
+
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        setHudStatus("SEM SUPORTE A VOZ", "#ef4444");
+        showToast("Seu navegador não possui suporte à Web Speech API. Use o campo de texto.");
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.lang = "pt-BR";
+      recognition.continuous = true;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        if (!isBusy) {
+          setOrbState("listening");
+          setHudStatus("ESCUTANDO...", "#22d3ee");
+        }
+      };
+
+      recognition.onresult = (event) => {
+        // ENQUANTO O TTS FALA OU O JARVIS PENSA, IGNORE O RECONHECIMENTO
+        if (isBusy) return;
+
+        const lastResultIndex = event.results.length - 1;
+        const transcript = event.results[lastResultIndex][0].transcript.trim();
+        if (!transcript) return;
+
+        handleIncomingVoice(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === 'not-allowed') {
+          setHudStatus("MIC BLOQUEADO", "#ef4444");
+          showToast("Permissão de microfone negada. Habilite no navegador.");
+        }
+      };
+
+      recognition.onend = () => {
+        // Reinicie no onend, mas SÓ quando não estiver ocupado
+        if (!isBusy && isSystemActive) {
+          restartListeningSafely();
+        }
+      };
+    }
+
+    function startListening() {
+      if (!recognition) return;
+      try {
+        recognition.start();
+      } catch (e) {
+        // Ignora caso já esteja rodando ("already started")
+      }
+    }
+
+    function restartListeningSafely() {
+      if (!recognition || !isSystemActive || isBusy) return;
+      try {
+        recognition.start();
+      } catch (e) {
+        // Já iniciado
+      }
+    }
+
+    // Clique no Orbe ou no botão de Microfone alterna a escuta manual
+    reactorOrb.addEventListener("click", () => {
+      triggerManualListening();
+    });
+
+    btnToggleMic.addEventListener("click", () => {
+      triggerManualListening();
+    });
+
+    function triggerManualListening() {
+      if (isBusy) {
+        stopSpeaking();
+        return;
+      }
+      isUserListeningToggled = true;
+      setOrbState("listening");
+      setHudStatus("ESCUTANDO...", "#22d3ee");
+      startListening();
+      showToast("Escuta ativa. Fale agora...");
+    }
+
+    /* ==========================================================================
+       TRATAMENTO DE ENTRADA DE VOZ (WAKE WORD & COMANDOS)
+       ========================================================================== */
+    function normalizeStr(text) {
+      return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+
+    function handleIncomingVoice(rawTranscript) {
+      const normalized = normalizeStr(rawTranscript);
+      const wake = CONFIG.wakeWord; // "ola jarvis"
+
+      // Atualiza visualmente o que o usuário disse
+      speechUserText.textContent = `"${rawTranscript}"`;
+      speechUserText.classList.remove("empty");
+
+      // Verifica Wake Word ou se o usuário acionou o microfone manualmente
+      const hasWakeWord = normalized.includes(wake) || normalized.includes("jarvis");
+
+      if (hasWakeWord) {
+        // Extrai o comando se a frase contiver a wake word seguida do pedido
+        let command = rawTranscript;
+        const regexWake = new RegExp(`(olá jarvis|ola jarvis|ei jarvis|jarvis)`, 'gi');
+        command = command.replace(regexWake, '').replace(/^[,.\s]+/, '').trim();
+
+        if (command.length > 2) {
+          processUserCommand(command);
+        } else {
+          // Apenas chamou a wake word
+          const ack = `Às suas ordens, ${CONFIG.address}. Em que posso servi-lo?`;
+          setDialogueText(null, ack);
+          speakText(ack);
+        }
+      } else if (isUserListeningToggled) {
+        // Se ativado manualmente pelo clique, consome o comando direto
+        isUserListeningToggled = false;
+        processUserCommand(rawTranscript);
+      }
+    }
+
+    // Entrada via campo de texto
+    textCommandInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const command = textCommandInput.value.trim();
+        if (!command) return;
+        textCommandInput.value = "";
+        speechUserText.textContent = `"${command}"`;
+        speechUserText.classList.remove("empty");
+        processUserCommand(command);
+      }
+    });
+
+    /* ==========================================================================
+       CÉREBRO (API DA ANTHROPIC — CLAUDE)
+       ========================================================================== */
+    async function processUserCommand(commandText) {
+      const apiKey = localStorage.getItem("anthropic_key") || apiKeyInput.value.trim();
+
+      if (!apiKey) {
+        const errorMsg = `Aviso: Por favor, insira e salve sua chave da API Anthropic no painel superior para ativar meus circuitos neurais, ${CONFIG.address}.`;
+        setDialogueText(null, errorMsg);
+        speakText(errorMsg);
+        return;
+      }
+
+      isBusy = true;
+      setOrbState("thinking");
+      setHudStatus("PROCESSANDO...", "#eab308");
+
+      // Registra mensagem do usuário no histórico da sessão
+      sessionHistory.push({ role: "user", content: commandText });
+
+      const systemPrompt = buildSystemPrompt();
+
+      try {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true", // CRÍTICO: sem isso = CORS
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            model: CONFIG.model,
+            max_tokens: 400,
+            system: systemPrompt,
+            messages: sessionHistory
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          console.error("Erro Anthropic HTTP:", response.status, errData);
+          const errorSpeech = `Aviso: Falha na comunicação com os servidores neurais. Por favor, verifique sua chave de acesso e limites, ${CONFIG.address}.`;
+          setDialogueText(null, errorSpeech);
+          speakText(errorSpeech);
+          return;
+        }
+
+        const data = await response.json();
+        const rawReply = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : "";
+
+        if (!rawReply) {
+          const emptySpeech = `Compreendido, ${CONFIG.address}. Nenhuma informação adicional retornada.`;
+          setDialogueText(null, emptySpeech);
+          speakText(emptySpeech);
+          return;
+        }
+
+        // PROTOCOLO DE MEMÓRIA VIVA: detecta [[SAVE:area|titulo|texto]]
+        const saveRegex = /\[\[SAVE:([a-z_]+)\|([^|]+)\|([\s\S]+?)\]\]/;
+        const match = rawReply.match(saveRegex);
+        let cleanReply = rawReply.replace(saveRegex, '').trim();
+
+        // Adiciona a resposta original ao histórico da sessão
+        sessionHistory.push({ role: "assistant", content: rawReply });
+
+        // Processa salvamento no Second Brain se detectado
+        let updatedNodeId = null;
+        if (match) {
+          const [, saveArea, saveTitle, saveBody] = match;
+          updatedNodeId = applyLivingMemory(saveArea.trim().toLowerCase(), saveTitle.trim(), saveBody.trim());
+        }
+
+        // Exibe e sintetiza a fala SEM a tag [[SAVE:...]]
+        setDialogueText(null, cleanReply);
+        speakText(cleanReply, () => {
+          if (updatedNodeId) {
+            flashNodeInGraph(updatedNodeId);
+          }
+        });
+
+      } catch (err) {
+        console.error("Falha de rede ou conexão:", err);
+        const netErrSpeech = `Não foi possível estabelecer conexão com o centro de dados, ${CONFIG.address}. Verifique sua conectividade.`;
+        setDialogueText(null, netErrSpeech);
+        speakText(netErrSpeech);
+      }
+    }
+
+    function buildSystemPrompt() {
+      // Agrupa todas as notas do estado atual por área
+      const grouped = {};
+      currentNotes.forEach(n => {
+        if (!grouped[n.area]) grouped[n.area] = [];
+        grouped[n.area].push(`• [${n.title}]: ${n.body}`);
+      });
+
+      let brainKnowledge = "";
+      for (const [areaKey, noteItems] of Object.entries(grouped)) {
+        const areaLabel = AREA[areaKey] ? AREA[areaKey].label.toUpperCase() : areaKey.toUpperCase();
+        brainKnowledge += `\n--- ÁREA: ${areaLabel} ---\n` + noteItems.join("\n");
+      }
+
+      return `Você é ${CONFIG.name}, o assistente pessoal estilo Jarvis e mordomo britânico leal do ${CONFIG.address}.
+Personalidade: ${CONFIG.persona}.
+Tratamento obrigatório: Trate o usuário SEMPRE como "${CONFIG.address}".
+Idioma: Português do Brasil com postura polida, sofisticada, refinada e objetiva.
+
+DIRETRIZES DE FALA (CRÍTICAS):
+1. Suas respostas serão faladas em voz alta via sintetizador de voz (TTS).
+2. Mantenha respostas curtas: estritamente de 2 a 4 frases, diretas e elegantes.
+3. NUNCA use emojis, asteriscos, itálico, negrito, numerações ou qualquer formatação markdown.
+4. Responda como um cavalheiro britânico servindo com dedicação e elegância.
+
+SECOND BRAIN (CONTEXTO COMPLETO DA VIDA DO ${CONFIG.address.toUpperCase()}):
+Você possui conhecimento prévio e contínuo sobre todos os pilares da vida do ${CONFIG.address}:
+${brainKnowledge}
+
+Personalize todas as respostas levando em conta quem é o ${CONFIG.address}, seus projetos (Resenha, Jarvis), suas metas em Portugal com a Ana, seus estudos em Java, Spring Boot e Ciência da Computação, sua carreira e família.
+
+PROTOCOLO DE MEMÓRIA VIVA:
+Se o usuário revelar algo novo e duradouro sobre sua vida ou projetos, TERMINE sua resposta com uma linha no formato EXATO:
+[[SAVE:area|titulo|texto]]
+Onde area DEVE pertencer a: metas, trabalho, projetos, financas, aprendizado, saude, relacoes, meta.
+Se já existir uma nota com esse título, ela será atualizada; senão, uma nova nota nascerá no grafo neural.
+Inclua essa instrução estritamente quando houver um fato novo e duradouro a ser arquivado no cérebro.`;
+    }
+
+    /* ==========================================================================
+       MEMÓRIA VIVA: GRAVAÇÃO E ATUALIZAÇÃO AUTOMÁTICA DE NOTAS
+       ========================================================================== */
+    function applyLivingMemory(area, title, body) {
+      const validArea = AREA[area] ? area : "meta";
+      const existingIndex = currentNotes.findIndex(n => normalizeStr(n.title) === normalizeStr(title));
+
+      let targetId = "";
+      if (existingIndex >= 0) {
+        currentNotes[existingIndex].area = validArea;
+        currentNotes[existingIndex].body = body;
+        targetId = currentNotes[existingIndex].id;
+        showToast(`Memória atualizada: "${title}"`);
+      } else {
+        targetId = "note_" + Date.now();
+        currentNotes.push({
+          id: targetId,
+          area: validArea,
+          title: title,
+          body: body
+        });
+        showToast(`Nova memória gravada: "${title}"`);
+      }
+
+      saveNotesToStorage();
+      renderGraph();
+      return targetId;
+    }
+
+    /* ==========================================================================
+       SECOND BRAIN — RENDERIZAÇÃO DO GRAFO NEURAL SVG
+       COMPATIBILIDADE: Injeção da string <svg> via innerHTML do DIV container
+       ========================================================================== */
+    let synapsePulses = [];
+
+    function renderGraph() {
+      updateBrainStats();
+      if (synapseAnimationId) {
+        cancelAnimationFrame(synapseAnimationId);
+      }
+
+      const width = 1000;
+      const height = 540;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radiusX = 370;
+      const radiusY = 195;
+      const total = currentNotes.length;
+
+      // Mapeia posições em elipse ao redor do núcleo
+      const nodePositions = {};
+      const nodeDegrees = {};
+
+      currentNotes.forEach(n => {
+        nodeDegrees[n.id] = 0;
+      });
+
+      // Calcula conexões
+      const activeEdges = [];
+      REL.forEach(([idA, idB]) => {
+        const hasA = currentNotes.some(n => n.id === idA);
+        const hasB = currentNotes.some(n => n.id === idB);
+        if (hasA && hasB) {
+          activeEdges.push([idA, idB]);
+          nodeDegrees[idA] = (nodeDegrees[idA] || 0) + 1;
+          nodeDegrees[idB] = (nodeDegrees[idB] || 0) + 1;
+        }
+      });
+
+      // Se houver notas sem conexões da lista predefinida, conecta suavemente ao núcleo/vizinhos
+      currentNotes.forEach((note, index) => {
+        const angle = (2 * Math.PI * index / Math.max(total, 1)) - (Math.PI / 2);
+        const x = centerX + radiusX * Math.cos(angle);
+        const y = centerY + radiusY * Math.sin(angle);
+        nodePositions[note.id] = { x, y, angle };
+      });
+
+      // Monta as arestas com curvas de Bézier quadráticas puxadas 35% em direção ao centro
+      let edgesSvg = "";
+      const edgeCurvesData = [];
+
+      activeEdges.forEach(([idA, idB], idx) => {
+        const posA = nodePositions[idA];
+        const posB = nodePositions[idB];
+        if (!posA || !posB) return;
+
+        const midX = (posA.x + posB.x) / 2;
+        const midY = (posA.y + posB.y) / 2;
+        // Ponto de controle puxado ~35% para o centro (500, 270)
+        const ctrlX = midX + (centerX - midX) * 0.35;
+        const ctrlY = midY + (centerY - midY) * 0.35;
+
+        edgeCurvesData.push({
+          p0: posA,
+          pc: { x: ctrlX, y: ctrlY },
+          p1: posB
+        });
+
+        edgesSvg += `
+          <path class="neural-edge" 
+                d="M ${posA.x.toFixed(1)} ${posA.y.toFixed(1)} Q ${ctrlX.toFixed(1)} ${ctrlY.toFixed(1)} ${posB.x.toFixed(1)} ${posB.y.toFixed(1)}" 
+                stroke="url(#edgeGrad)" 
+                stroke-width="1.3" 
+                stroke-opacity="0.45" 
+                fill="none" />
+        `;
+      });
+
+      // Raios finos do núcleo até cada nó
+      let coreRaysSvg = "";
+      currentNotes.forEach(note => {
+        const pos = nodePositions[note.id];
+        if (!pos) return;
+        const color = (AREA[note.area] && AREA[note.area].color) || "#a855f7";
+        coreRaysSvg += `
+          <line x1="${centerX}" y1="${centerY}" x2="${pos.x.toFixed(1)}" y2="${pos.y.toFixed(1)}" 
+                stroke="${color}" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="3,3" />
+        `;
+      });
+
+      // Nós
+      let nodesSvg = "";
+      currentNotes.forEach(note => {
+        const pos = nodePositions[note.id];
+        if (!pos) return;
+        const areaData = AREA[note.area] || { label: note.area, color: "#a855f7" };
+        const degree = nodeDegrees[note.id] || 0;
+        // Tamanho do nó cresce com o número de conexões (hubs maiores)
+        const baseRadius = 15 + Math.min(degree * 2.2, 14);
+
+        nodesSvg += `
+          <g class="node-group" id="node-elm-${note.id}" onclick="window.openNoteEditor('${note.id}')" transform="translate(0,0)">
+            <!-- Anel de Respiração Exterior -->
+            <circle class="breathing-ring" cx="${pos.x.toFixed(1)}" cy="${pos.y.toFixed(1)}" r="${(baseRadius + 6).toFixed(1)}" 
+                    stroke="${areaData.color}" stroke-width="1.5" stroke-opacity="0.5" fill="none" />
+            
+            <!-- Nó Principal com Glow -->
+            <circle class="node-circle" id="node-circle-${note.id}" cx="${pos.x.toFixed(1)}" cy="${pos.y.toFixed(1)}" r="${baseRadius.toFixed(1)}" 
+                    fill="${areaData.color}" fill-opacity="0.88" stroke="#ffffff" stroke-width="1.8" 
+                    filter="url(#nodeGlow)" />
+            
+            <!-- Rótulo / Título Embaixo -->
+            <text x="${pos.x.toFixed(1)}" y="${(pos.y + baseRadius + 14).toFixed(1)}" 
+                  text-anchor="middle" fill="#f8fafc" font-family="var(--font-mono)" font-size="11" font-weight="700" letter-spacing="0.04em">
+              ${escapeXml(note.title)}
+            </text>
+            <text x="${pos.x.toFixed(1)}" y="${(pos.y + baseRadius + 26).toFixed(1)}" 
+                  text-anchor="middle" fill="${areaData.color}" font-family="var(--font-sans)" font-size="9" opacity="0.85">
+              ${escapeXml(areaData.label)}
+            </text>
+          </g>
+        `;
+      });
+
+      // SVG de Pulso de Sinapses (~12 pontos viajando pelas curvas)
+      let synapsesSvg = "";
+      for (let i = 0; i < 12; i++) {
+        synapsesSvg += `<circle id="synapse-dot-${i}" r="3" fill="#ffffff" filter="url(#synapseGlow)" opacity="0" />`;
+      }
+
+      // String completa do SVG com namespace
+      const svgFullMarkup = `
+        <svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Filtro de Glow dos Nós -->
+            <filter id="nodeGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            <!-- Filtro de Glow do Núcleo -->
+            <filter id="coreGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="16" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <!-- Filtro de Glow das Sinapses -->
+            <filter id="synapseGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <!-- Gradiente Roxo -> Ciano para Arestas -->
+            <linearGradient id="edgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#a855f7" stop-opacity="0.8" />
+              <stop offset="50%" stop-color="#818cf8" stop-opacity="0.4" />
+              <stop offset="100%" stop-color="#22d3ee" stop-opacity="0.8" />
+            </linearGradient>
+
+            <!-- Gradiente do Núcleo -->
+            <radialGradient id="coreGrad" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#f5d0fe" />
+              <stop offset="35%" stop-color="#c084fc" />
+              <stop offset="70%" stop-color="#7e22ce" />
+              <stop offset="100%" stop-color="#3b0764" />
+            </radialGradient>
+          </defs>
+
+          <!-- Fundo Sutil de Grade Circular -->
+          <circle cx="${centerX}" cy="${centerY}" r="140" stroke="rgba(168,85,247,0.08)" stroke-width="1" fill="none" />
+          <circle cx="${centerX}" cy="${centerY}" r="260" stroke="rgba(168,85,247,0.06)" stroke-width="1" fill="none" />
+          <circle cx="${centerX}" cy="${centerY}" r="380" stroke="rgba(168,85,247,0.04)" stroke-width="1" fill="none" />
+
+          <!-- Raios do Núcleo até os Nós -->
+          <g id="core-rays-layer">${coreRaysSvg}</g>
+
+          <!-- Arestas (Teia Densa em Curvas Bézier) -->
+          <g id="edges-layer">${edgesSvg}</g>
+
+          <!-- Pontos de Sinapse Móveis -->
+          <g id="synapses-layer">${synapsesSvg}</g>
+
+          <!-- Núcleo Central Pulsante com 🧠 -->
+          <g id="core-center-group">
+            <!-- Anel de Respiração do Núcleo -->
+            <circle class="breathing-ring" cx="${centerX}" cy="${centerY}" r="46" stroke="#c084fc" stroke-width="2" stroke-opacity="0.4" fill="none" />
+            <!-- Círculo do Núcleo -->
+            <circle cx="${centerX}" cy="${centerY}" r="36" fill="url(#coreGrad)" stroke="#f3e8ff" stroke-width="1.8" filter="url(#coreGlow)" />
+            <!-- Ícone/Emoji no Centro -->
+            <text x="${centerX}" y="${centerY + 7}" text-anchor="middle" font-size="20" style="user-select:none; pointer-events:none;">🧠</text>
+          </g>
+
+          <!-- Nós das Notas -->
+          <g id="nodes-layer">${nodesSvg}</g>
+        </svg>
+      `;
+
+      // REGRA CRÍTICA DE COMPATIBILIDADE: injeta na DIV contêiner
+      graphContainer.innerHTML = svgFullMarkup;
+
+      // Inicia Animação de Sinapses via requestAnimationFrame
+      if (edgeCurvesData.length > 0) {
+        initSynapsePulses(edgeCurvesData);
+      }
+    }
+
+    function initSynapsePulses(curves) {
+      synapsePulses = [];
+      const numPulses = 12;
+
+      for (let i = 0; i < numPulses; i++) {
+        synapsePulses.push({
+          curveIndex: Math.floor(Math.random() * curves.length),
+          t: Math.random(), // Inicia em pontos diferentes
+          speed: 0.0035 + Math.random() * 0.0045
+        });
+      }
+
+      function stepSynapses() {
+        synapsePulses.forEach((pulse, idx) => {
+          pulse.t += pulse.speed;
+          if (pulse.t >= 1) {
+            pulse.t = 0;
+            pulse.curveIndex = Math.floor(Math.random() * curves.length);
+          }
+
+          const curve = curves[pulse.curveIndex];
+          if (!curve) return;
+
+          // Fórmula de Bézier Quadrática: (1-t)²·P0 + 2(1-t)t·Pc + t²·P1
+          const t = pulse.t;
+          const invT = 1 - t;
+          const x = (invT * invT * curve.p0.x) + (2 * invT * t * curve.pc.x) + (t * t * curve.p1.x);
+          const y = (invT * invT * curve.p0.y) + (2 * invT * t * curve.pc.y) + (t * t * curve.p1.y);
+
+          // Opacidade em sino: sin(pi * t)
+          const opacity = Math.sin(Math.PI * t) * 0.95;
+
+          const dotElm = document.getElementById(`synapse-dot-${idx}`);
+          if (dotElm) {
+            dotElm.setAttribute("cx", x.toFixed(1));
+            dotElm.setAttribute("cy", y.toFixed(1));
+            dotElm.setAttribute("opacity", opacity.toFixed(2));
+          }
+        });
+
+        synapseAnimationId = requestAnimationFrame(stepSynapses);
+      }
+
+      stepSynapses();
+    }
+
+    function flashNodeInGraph(nodeId) {
+      const circleElm = document.getElementById(`node-circle-${nodeId}`);
+      if (circleElm) {
+        circleElm.classList.remove("node-flash");
+        void circleElm.offsetWidth; // Trigger reflow
+        circleElm.classList.add("node-flash");
+      }
+    }
+
+    function escapeXml(unsafe) {
+      return (unsafe || "").replace(/[<>&'"]/g, (c) => {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    /* ==========================================================================
+       MODAL DE EDIÇÃO / CRIAÇÃO DE NOTAS
+       ========================================================================== */
+    window.openNoteEditor = function(noteId) {
+      const note = currentNotes.find(n => n.id === noteId);
+      if (!note) return;
+
+      modalHeading.textContent = "EDITAR NOTA NEURAL";
+      modalNoteId.value = note.id;
+      modalInputTitle.value = note.title;
+      modalSelectArea.value = note.area;
+      modalTextareaBody.value = note.body;
+      btnDeleteCurrentNote.style.display = "inline-block";
+
+      modalNote.classList.add("open");
+    };
+
+    btnAddNote.addEventListener("click", () => {
+      modalHeading.textContent = "NOVA NOTA NEURAL";
+      modalNoteId.value = "";
+      modalInputTitle.value = "";
+      modalSelectArea.value = "metas";
+      modalTextareaBody.value = "";
+      btnDeleteCurrentNote.style.display = "none";
+
+      modalNote.classList.add("open");
+    });
+
+    btnCloseModal.addEventListener("click", () => {
+      modalNote.classList.remove("open");
+    });
+
+    modalNote.addEventListener("click", (e) => {
+      if (e.target === modalNote) {
+        modalNote.classList.remove("open");
+      }
+    });
+
+    btnSaveCurrentNote.addEventListener("click", () => {
+      const id = modalNoteId.value;
+      const title = modalInputTitle.value.trim();
+      const area = modalSelectArea.value;
+      const body = modalTextareaBody.value.trim();
+
+      if (!title || !body) {
+        showToast("Preencha o título e o conteúdo da nota.");
+        return;
+      }
+
+      if (id) {
+        // Atualizar nota existente
+        const note = currentNotes.find(n => n.id === id);
+        if (note) {
+          note.title = title;
+          note.area = area;
+          note.body = body;
+          showToast(`Nota "${title}" atualizada.`);
+        }
+      } else {
+        // Criar nova nota
+        const newId = "note_" + Date.now();
+        currentNotes.push({ id: newId, title, area, body });
+        showToast(`Nota "${title}" criada.`);
+      }
+
+      saveNotesToStorage();
+      modalNote.classList.remove("open");
+      renderGraph();
+    });
+
+    btnDeleteCurrentNote.addEventListener("click", () => {
+      const id = modalNoteId.value;
+      if (!id) return;
+
+      if (confirm("Tem certeza que deseja excluir esta nota do Second Brain?")) {
+        currentNotes = currentNotes.filter(n => n.id !== id);
+        saveNotesToStorage();
+        modalNote.classList.remove("open");
+        renderGraph();
+        showToast("Nota removida.");
+      }
+    });
+
+    /* ==========================================================================
+       HELPERS DE INTERFACE & STATUS
+       ========================================================================== */
+    function setOrbState(state) {
+      // state: 'idle' | 'listening' | 'thinking' | 'speaking'
+      reactorOrb.className = `orb-wrapper state-${state}`;
+    }
+
+    function setHudStatus(text, color) {
+      hudStatusText.textContent = text;
+      hudStatusIndicator.style.background = color;
+      hudStatusIndicator.style.boxShadow = `0 0 10px ${color}`;
+      hudStatus.style.borderColor = color;
+    }
+
+    function setDialogueText(userMsg, jarvisMsg) {
+      if (userMsg !== null && userMsg !== undefined) {
+        speechUserText.textContent = userMsg ? `"${userMsg}"` : "Aguardando comando...";
+        speechUserText.classList.toggle("empty", !userMsg);
+      }
+      if (jarvisMsg !== null && jarvisMsg !== undefined) {
+        speechJarvisText.textContent = jarvisMsg;
+      }
+    }
+
+    function showToast(message) {
+      toastMsg.textContent = message;
+      toastMsg.classList.add("show");
+      setTimeout(() => {
+        toastMsg.classList.remove("show");
+      }, 3400);
+    }
+  </script>
+</body>
+</html>
