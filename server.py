@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 import json
+import mimetypes
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
+
+mimetypes.init()
 
 HOST = "0.0.0.0"
 PORT = int(os.getenv("PORT", "8080"))
@@ -80,11 +83,76 @@ class JarvisServer(BaseHTTPRequestHandler):
     # GET
     # =========================
 
+    @staticmethod
+    def _get_content_type(file_path: Path) -> str:
+        suffix = file_path.suffix.lower()
+        custom_types = {
+            ".css": "text/css; charset=utf-8",
+            ".js": "application/javascript; charset=utf-8",
+            ".mjs": "application/javascript; charset=utf-8",
+            ".json": "application/json; charset=utf-8",
+            ".html": "text/html; charset=utf-8",
+            ".svg": "image/svg+xml",
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".gif": "image/gif",
+            ".webp": "image/webp",
+            ".ico": "image/x-icon",
+            ".woff": "font/woff",
+            ".woff2": "font/woff2",
+            ".ttf": "font/ttf",
+            ".otf": "font/otf",
+            ".mp3": "audio/mpeg",
+            ".wav": "audio/wav",
+            ".txt": "text/plain; charset=utf-8",
+        }
+        if suffix in custom_types:
+            return custom_types[suffix]
+
+        guessed, _ = mimetypes.guess_type(str(file_path))
+        if guessed:
+            if guessed.startswith("text/"):
+                return f"{guessed}; charset=utf-8"
+            return guessed
+        return "application/octet-stream"
+
+    def serve_static_file(self, url_path: str):
+        rel_path = url_path.lstrip("/")
+        if not rel_path:
+            self._send_json(404, {"error": "Arquivo não encontrado."})
+            return
+
+        try:
+            target_file = (BASE_DIR / rel_path).resolve()
+            relative_target = target_file.relative_to(BASE_DIR)
+        except (ValueError, RuntimeError):
+            self._send_json(403, {"error": "Acesso negado: fora do diretório permitido."})
+            return
+
+        # Bloqueio de arquivos e diretórios ocultos (.git, .env, etc.) e extensões restritas
+        if any(part.startswith(".") for part in relative_target.parts) or \
+           target_file.suffix in (".py", ".env", ".command", ".sh") or \
+           ".bak" in target_file.name:
+            self._send_json(403, {"error": "Acesso proibido."})
+            return
+
+        if not target_file.is_file():
+            self._send_json(404, {"error": "Arquivo não encontrado."})
+            return
+
+        try:
+            content_type = self._get_content_type(target_file)
+            content = target_file.read_bytes()
+            self._send_bytes(200, content_type, content)
+        except Exception as exc:
+            self._send_json(500, {"error": f"Erro ao ler arquivo estático: {str(exc)}"})
+
     def do_GET(self):
-        path = urlparse(self.path).path
+        url_path = unquote(urlparse(self.path).path)
 
         # Página principal
-        if path in ("/", "/index.html"):
+        if url_path in ("/", "/index.html"):
             try:
                 self._send_bytes(
                     200,
@@ -96,21 +164,18 @@ class JarvisServer(BaseHTTPRequestHandler):
                     500,
                     {"error": str(exc)}
                 )
-
             return
 
         # Health check
-        if path == "/health":
+        if url_path == "/health":
             self._send_json(
                 200,
                 {"status": "ok"}
             )
             return
 
-        self._send_json(
-            404,
-            {"error": "Rota não encontrada."}
-        )
+        # Arquivos estáticos (suporte a /css/, /js/, /assets/ e arquivos gerais do projeto)
+        self.serve_static_file(url_path)
 
     # =========================
     # POST
