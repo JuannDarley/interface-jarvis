@@ -1,5 +1,6 @@
 #!/bin/bash
 cd "$(dirname "$0")"
+export HOST="${HOST:-127.0.0.1}"
 
 if [ -z "$GROQ_API_KEY" ]; then
   echo "Informe sua chave da Groq (necessária para conversar):"

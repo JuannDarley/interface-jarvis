@@ -11,7 +11,7 @@ from urllib.error import HTTPError, URLError
 
 mimetypes.init()
 
-HOST = os.getenv("HOST", "127.0.0.1")
+HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8080"))
 
 # =========================
@@ -518,7 +518,7 @@ def main():
     print("========================================")
     print("       JARVIS - SERVIDOR LOCAL")
     print("========================================")
-    print(f"URL: http://localhost:{PORT}")
+    print(f"Bind: {HOST}:{PORT}")
     print("Chat: Groq")
     print(f"Modelo: {GROQ_MODEL}")
     print("TTS: Fish Audio")

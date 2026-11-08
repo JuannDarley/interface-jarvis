@@ -200,7 +200,6 @@
   <div id="toast-msg">Notificação do sistema</div>
 
   <!-- Lógica principal da interface e do Second Brain. -->
-  <script src="js/app.js"></script>
 
   <!-- ======================================================================
        FASE 3: TELA FACE 🛰 (COCKPIT HUD JARVIS EM TELA CHEIA)
@@ -354,7 +353,13 @@
   </div>
 
   <!-- Script Controlador do Cockpit Face Mode -->
-  <script src="js/face-mode.js"></script>
 
+  <!-- Os scripts clássicos compartilham o estado global e são carregados em ordem de dependência. -->
+  <script src="js/state.js"></script>
+  <script src="js/brain.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/face-mode.js"></script>
 </body>
 </html>
