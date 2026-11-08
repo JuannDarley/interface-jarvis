@@ -1,0 +1,329 @@
+
+    /* --------------------------------------------------------------------------
+       A. TOKENS DE DESIGN EM :root
+       -------------------------------------------------------------------------- */
+    :root {
+      /* Cores de Fundo & Superfícies */
+      --bg: #05020c;
+      --bg-elevated: #0d061a;
+      --surface: rgba(18, 9, 32, 0.72);
+      --surface-card: rgba(22, 11, 40, 0.65);
+      --surface-hover: rgba(36, 18, 64, 0.8);
+      --card: rgba(20, 10, 36, 0.75);
+
+      /* Bordas & Hairlines Refinadas */
+      --border: rgba(168, 85, 247, 0.22);
+      --border-strong: rgba(192, 132, 252, 0.5);
+      --border-accent: rgba(34, 211, 238, 0.45);
+
+      /* Cores da Marca & Luz */
+      --primary: #a855f7;
+      --primary-bright: #c084fc;
+      --primary-dim: rgba(168, 85, 247, 0.16);
+      --primary-glow: rgba(168, 85, 247, 0.45);
+      --accent: #22d3ee;
+      --accent-dim: rgba(34, 211, 238, 0.15);
+      --accent-glow: rgba(34, 211, 238, 0.45);
+      --accent-magenta: #f43f5e;
+
+      /* Tipografia de Alto Contraste */
+      --txt: #f8fafc;
+      --txt2: #cbd5e1;
+      --txt3: #94a3b8;
+      --txt-dim: #64748b;
+
+      /* Semântica do Sistema */
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #fbbf24;
+
+      /* Gradientes */
+      --brand-grad: linear-gradient(120deg, var(--primary), var(--accent));
+      --card-grad: linear-gradient(145deg, rgba(168, 85, 247, 0.09) 0%, rgba(34, 211, 238, 0.03) 100%);
+      --hud-glass: rgba(12, 6, 22, 0.82);
+
+      /* Tipografia: Sans no corpo + Mono nos números e badges */
+      --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+      --font-display: 'Orbitron', var(--font-sans);
+
+      /* Geometria: Cantos suaves & Densidade equilibrada */
+      --radius-sm: 8px;
+      --radius: 14px;
+      --radius-lg: 22px;
+
+      /* Transições & Movimento com Propósito */
+      --ease: cubic-bezier(.22, 1, .36, 1);
+      --dur: 0.22s;
+
+      /* Escala de Espaçamento */
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 24px;
+      --sp-6: 32px;
+      --sp-7: 52px;
+    }
+
+    /* --------------------------------------------------------------------------
+       B. PROFUNDIDADE & MATERIAL (BACKGROUND AURORA + DOT-GRID)
+       -------------------------------------------------------------------------- */
+    body {
+      background-color: var(--bg) !important;
+      font-family: var(--font-sans) !important;
+      position: relative;
+    }
+
+    /* Aurora Ambiente Animada */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 18% 20%, rgba(147, 51, 234, 0.16) 0%, transparent 48%),
+        radial-gradient(circle at 82% 78%, rgba(34, 211, 238, 0.12) 0%, transparent 52%),
+        radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+      animation: auroraPulse 22s ease-in-out infinite alternate;
+    }
+
+    /* Micro Dot-Grid de Alta Precisão */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(rgba(168, 85, 247, 0.14) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+      background-size: 32px 32px, 64px 64px, 64px 64px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.65;
+    }
+
+    @keyframes auroraPulse {
+      0% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.06); }
+      100% { opacity: 0.8; transform: scale(1.02); }
+    }
+
+    #app-container, #screen-boot, #screen-activation {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(168, 85, 247, 0.35);
+      border-radius: 4px;
+      border: 1px solid rgba(168, 85, 247, 0.15);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(168, 85, 247, 0.65);
+    }
+
+    ::selection {
+      background: rgba(168, 85, 247, 0.4);
+      color: #ffffff;
+    }
+
+    /* --------------------------------------------------------------------------
+       C. ELEVAÇÃO DO DASHBOARD PRINCIPAL (GLASSMORPHISM & SCI-FI DETAILS)
+       -------------------------------------------------------------------------- */
+    .hud-topbar {
+      background: var(--surface) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius) !important;
+      backdrop-filter: blur(24px) !important;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+      transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+
+    .hud-topbar:hover {
+      border-color: var(--border-strong) !important;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    }
+
+    .hud-title {
+      font-family: var(--font-display) !important;
+      letter-spacing: 0.18em !important;
+      background: linear-gradient(135deg, #ffffff 0%, #e9d5ff 50%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hud-subtitle {
+      font-family: var(--font-mono) !important;
+      color: var(--txt3) !important;
+      letter-spacing: 0.08em;
+    }
+
+    /* Botão 🛰 FACE no Topbar */
+    .btn-face-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.16) 0%, rgba(168, 85, 247, 0.22) 100%);
+      border: 1px solid var(--border-accent);
+      color: #e0f2fe;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all var(--dur) var(--ease);
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.22), inset 0 0 10px rgba(34, 211, 238, 0.12);
+      white-space: nowrap;
+    }
+
+    .btn-face-trigger:hover {
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.35) 0%, rgba(168, 85, 247, 0.45) 100%);
+      border-color: var(--accent);
+      box-shadow: 0 0 28px rgba(34, 211, 238, 0.5), inset 0 0 16px rgba(34, 211, 238, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .btn-face-shortcut {
+      opacity: 0.6;
+      font-size: 0.75em;
+    }
+
+    .btn-face-trigger:active {
+      transform: scale(0.98);
+    }
+
+    /* Status Badge */
+    .hud-status-badge {
+      background: rgba(18, 9, 32, 0.75) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 40px !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+      font-family: var(--font-mono) !important;
+    }
+
+    /* Caixa de Diálogo HUD */
+    .dialogue-box {
+      background: var(--surface-card) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius) !important;
+      backdrop-filter: blur(24px) !important;
+      box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+      position: relative;
+    }
+
+    .dialogue-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 24px;
+      right: 24px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .dialogue-label {
+      font-family: var(--font-mono) !important;
+      font-size: 0.72rem !important;
+      letter-spacing: 0.22em !important;
+    }
+
+    .dialogue-text {
+      font-family: var(--font-sans) !important;
+      font-size: 1.05rem !important;
+      line-height: 1.6 !important;
+    }
+
+    .input-text-command {
+      background: rgba(14, 7, 26, 0.75) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius) !important;
+      font-family: var(--font-sans) !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4) !important;
+      transition: all var(--dur) var(--ease) !important;
+    }
+
+    .input-text-command:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 24px rgba(34, 211, 238, 0.35), inset 0 1px 2px rgba(0,0,0,0.5) !important;
+    }
+
+    .btn-action-icon {
+      border-radius: var(--radius) !important;
+      transition: all var(--dur) var(--ease) !important;
+    }
+
+    /* Second Brain Section */
+    .brain-section {
+      background: var(--surface) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-lg) !important;
+      backdrop-filter: blur(24px) !important;
+      box-shadow: 0 18px 54px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .brain-title {
+      font-family: var(--font-display) !important;
+      letter-spacing: 0.12em !important;
+    }
+
+    .brain-subtitle {
+      font-family: var(--font-mono) !important;
+      color: var(--txt3) !important;
+    }
+
+    .brain-counter {
+      font-family: var(--font-mono) !important;
+      letter-spacing: 0.06em;
+      border-radius: var(--radius-sm) !important;
+    }
+
+    .btn-brain-tool {
+      border-radius: var(--radius-sm) !important;
+      font-family: var(--font-mono) !important;
+      transition: all var(--dur) var(--ease) !important;
+    }
+
+    #graph-container {
+      background: radial-gradient(circle at 50% 50%, rgba(26, 11, 46, 0.85) 0%, rgba(6, 2, 14, 0.98) 100%) !important;
+      border: 1px solid rgba(168, 85, 247, 0.28) !important;
+      border-radius: var(--radius) !important;
+    }
+
+    /* Modal */
+    .modal-card {
+      background: rgba(14, 7, 26, 0.95) !important;
+      border: 1px solid var(--border-strong) !important;
+      border-radius: var(--radius-lg) !important;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(168, 85, 247, 0.25) !important;
+      backdrop-filter: blur(28px) !important;
+    }
+
+    .modal-title {
+      font-family: var(--font-display) !important;
+      letter-spacing: 0.14em !important;
+    }
+
+    .modal-input, .modal-select, .modal-textarea {
+      border-radius: var(--radius-sm) !important;
+      font-family: var(--font-sans) !important;
+      background: rgba(6, 3, 14, 0.8) !important;
+      border: 1px solid var(--border) !important;
+    }
+
+    .modal-input:focus, .modal-select:focus, .modal-textarea:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.35) !important;
+    }

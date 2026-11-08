@@ -1,0 +1,359 @@
+/* Animação Compartilhada (Dashboard & Face Mode) */
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+    }
+
+    /* ==========================================================================
+       SECOND BRAIN — GRAFO NEURAL ANIMADO
+       ========================================================================== */
+    .brain-section {
+      background: var(--bg-panel);
+      border: 1px solid var(--bg-panel-border);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .brain-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+      padding-bottom: 14px;
+    }
+
+    .brain-title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .brain-title {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brain-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .brain-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brain-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.12);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-brain-tool {
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+      padding: 7px 15px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-brain-tool:hover {
+      background: rgba(168, 85, 247, 0.4);
+      border-color: #c084fc;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+    }
+
+    /* Container do SVG Neural */
+    #graph-container {
+      width: 100%;
+      height: 520px;
+      background: radial-gradient(circle at 50% 50%, rgba(26, 11, 46, 0.7) 0%, rgba(10, 4, 18, 0.95) 100%);
+      border-radius: 14px;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    #graph-container svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+.brain-center-label {
+  user-select: none;
+  pointer-events: none;
+}
+
+    /* Animação das Arestas com dashoffset */
+    .neural-edge {
+      stroke-dasharray: 6 5;
+      animation: dashStream 16s linear infinite;
+    }
+    @keyframes dashStream {
+      from { stroke-dashoffset: 200; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Nós Interativos */
+    .node-group {
+      cursor: pointer;
+      transition: transform 0.25s ease;
+    }
+    .node-group:hover {
+      filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.7));
+    }
+    .node-group:hover .node-circle {
+      transform: scale(1.15);
+    }
+
+    /* Respiração do Nó (Breathing ring) */
+    .breathing-ring {
+      animation: nodeBreathe 3.5s ease-in-out infinite;
+      transform-origin: center;
+      pointer-events: none;
+    }
+    @keyframes nodeBreathe {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 0.75; transform: scale(1.22); }
+    }
+
+    /* Piscar nó recém-salvo */
+    .node-flash {
+      animation: flashNode 0.5s ease-in-out 3;
+    }
+    @keyframes flashNode {
+      0%, 100% { fill-opacity: 0.85; filter: drop-shadow(0 0 8px var(--primary)); }
+      50% { fill-opacity: 1; fill: #ffffff !important; filter: drop-shadow(0 0 25px #ffffff); }
+    }
+
+    /* Legenda */
+    .brain-legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      padding-top: 10px;
+    }
+
+    .legend-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-verified {
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+       MODAL DE EDIÇÃO / CRIAÇÃO DE NOTAS
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 1, 6, 0.8);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 520px;
+      background: #0f081d;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.25);
+      border-radius: 18px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .modal-title {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 0;
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .modal-close:hover { color: #f8fafc; }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .modal-label {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .modal-input, .modal-select, .modal-textarea {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #f8fafc;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .modal-input:focus, .modal-select:focus, .modal-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .modal-textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-save-note {
+      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(168, 85, 247, 0.4);
+    }
+    .btn-save-note:hover {
+      box-shadow: 0 0 26px rgba(168, 85, 247, 0.7);
+    }
+
+    .btn-delete-note {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-delete-note:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Notificação Toast */
+    #toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(20, 10, 36, 0.95);
+      border: 1px solid var(--primary);
+      color: #f8fafc;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(168, 85, 247, 0.35);
+      z-index: 1500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    #toast-msg.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Responsividade Second Brain */
+    @media (max-width: 768px) {
+      #graph-container {
+        height: 440px;
+      }
+    }

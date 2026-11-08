@@ -1,0 +1,661 @@
+/* Estilos exclusivos do cockpit Face Mode. */
+/* --------------------------------------------------------------------------
+       D. TELA FACE (🛰) — COCKPIT HUD EM TELA CHEIA
+       -------------------------------------------------------------------------- */
+    #faceMode {
+      position: fixed;
+      inset: 0;
+      background: #04010a;
+      z-index: 2500;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      color: var(--txt);
+      font-family: var(--font-sans);
+      user-select: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s var(--ease);
+    }
+
+    #faceMode.on {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Overlay de Scanlines */
+    .face-scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.28) 0px,
+        rgba(0, 0, 0, 0.28) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.85;
+    }
+
+    /* Aurora Cônica Giratória */
+    .face-aurora {
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(
+        from 0deg at 50% 50%,
+        rgba(168, 85, 247, 0.08) 0deg,
+        rgba(34, 211, 238, 0.06) 90deg,
+        rgba(147, 51, 234, 0.08) 180deg,
+        rgba(34, 211, 238, 0.06) 270deg,
+        rgba(168, 85, 247, 0.08) 360deg
+      );
+      animation: rotateAurora 90s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+      filter: blur(60px);
+    }
+
+    @keyframes rotateAurora {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 4 Cantoneiras HUD (Corner Brackets) */
+    .face-bracket {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-color: var(--accent);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0.85;
+      filter: drop-shadow(0 0 6px var(--accent-glow));
+    }
+    .face-bracket.tl { top: 16px; left: 16px; border-width: 2px 0 0 2px; }
+    .face-bracket.tr { top: 16px; right: 16px; border-width: 2px 2px 0 0; }
+    .face-bracket.bl { bottom: 16px; left: 16px; border-width: 0 0 2px 2px; }
+    .face-bracket.br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; }
+
+    /* Topo do Cockpit */
+    .face-header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      background: rgba(10, 4, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+    }
+
+    .face-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .face-logo-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 16px var(--accent);
+      animation: pulseDot 2s infinite;
+    }
+
+    .face-brand-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: 0.22em;
+      background: linear-gradient(135deg, #ffffff 0%, #c084fc 60%, #22d3ee 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.5));
+    }
+
+    .face-brand-sub {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      color: var(--txt3);
+    }
+
+    .face-status-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 18px;
+      background: rgba(34, 211, 238, 0.1);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+    }
+
+    .face-status-led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulseDot 1.4s infinite;
+    }
+
+    .face-clock-box {
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    .face-clock-digits {
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #f1f5f9;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+    }
+
+    .face-clock-date {
+      font-size: 0.76rem;
+      color: var(--txt3);
+      letter-spacing: 0.08em;
+      text-transform: capitalize;
+    }
+
+    .face-btn-close {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all var(--dur) var(--ease);
+      margin-left: 14px;
+    }
+
+    .face-btn-close:hover {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: #f87171;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .face-shortcut-hint {
+      opacity: 0.6;
+      font-size: 0.72rem;
+    }
+
+    /* Grid Principal do Cockpit */
+    .face-cockpit-grid {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 290px 1fr 290px;
+      gap: 20px;
+      padding: 20px 28px;
+      overflow: hidden;
+      align-items: center;
+    }
+
+    .face-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+      justify-content: center;
+    }
+
+    .face-card {
+      background: rgba(14, 7, 26, 0.78);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .face-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.18);
+      padding-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .face-card-icon {
+      color: var(--accent);
+    }
+
+    .face-card-tag {
+      margin-left: auto;
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+    }
+
+    .face-vitals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .face-vital-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+    }
+
+    .vital-label {
+      color: var(--txt3);
+      letter-spacing: 0.08em;
+    }
+
+    .vital-num {
+      color: #f1f5f9;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .vital-audio-state {
+      color: var(--accent);
+    }
+
+    .vital-bar-track {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 0 4px;
+    }
+
+    .vital-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: var(--brand-grad);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .face-vu-meter {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 14px;
+    }
+
+    .vu-bar {
+      width: 3px;
+      height: 40%;
+      background: var(--accent);
+      border-radius: 1px;
+      animation: vuAnim 0.8s ease-in-out infinite alternate;
+    }
+    .vu-bar:nth-child(2) { animation-delay: 0.1s; height: 75%; }
+    .vu-bar:nth-child(3) { animation-delay: 0.3s; height: 100%; }
+    .vu-bar:nth-child(4) { animation-delay: 0.15s; height: 60%; }
+    .vu-bar:nth-child(5) { animation-delay: 0.4s; height: 85%; }
+    .vu-bar:nth-child(6) { animation-delay: 0.25s; height: 50%; }
+    .vu-bar:nth-child(7) { animation-delay: 0.35s; height: 70%; }
+
+    @keyframes vuAnim {
+      0% { transform: scaleY(0.3); opacity: 0.5; }
+      100% { transform: scaleY(1); opacity: 1; }
+    }
+
+    .face-status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    .status-dot.dot-online {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .status-name {
+      color: var(--txt2);
+      flex: 1;
+    }
+
+    .status-val {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* Logs no Cockpit */
+    .face-logs-console {
+      height: 130px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--txt3);
+      padding-right: 4px;
+    }
+
+    .log-line {
+      line-height: 1.35;
+      display: flex;
+      gap: 6px;
+    }
+
+    .log-time {
+      color: var(--accent);
+      opacity: 0.8;
+      flex-shrink: 0;
+    }
+
+    .log-text {
+      color: #e2e8f0;
+      word-break: break-word;
+    }
+
+    /* Radar do Second Brain */
+    .face-radar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .radar-item {
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .radar-title {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .radar-area {
+      color: var(--accent);
+      font-size: 0.65rem;
+    }
+
+    .radar-desc {
+      font-size: 0.72rem;
+      color: var(--txt3);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Palco Central: Reator Orb 3D / Fibonacci Sphere */
+    .face-stage-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .face-orb-hero {
+      position: relative;
+      width: 440px;
+      height: 440px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* 3 Anéis Concêntricos com conic-gradient + radial mask */
+    .face-ring {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .face-ring.r1 {
+      inset: 20px;
+      background: conic-gradient(from 0deg, var(--accent) 0%, transparent 60%, var(--primary) 100%);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+      animation: spinRing 9s linear infinite;
+      opacity: 0.8;
+      filter: drop-shadow(0 0 10px var(--accent-glow));
+    }
+
+    .face-ring.r2 {
+      inset: 48px;
+      background: conic-gradient(from 180deg, var(--primary) 0%, transparent 50%, var(--accent-magenta) 100%);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+      animation: spinRingReverse 15s linear infinite;
+      opacity: 0.7;
+      filter: drop-shadow(0 0 12px var(--primary-glow));
+    }
+
+    .face-ring.r3 {
+      inset: 76px;
+      background: conic-gradient(from 90deg, var(--accent) 0%, transparent 40%, var(--primary) 100%);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+      animation: spinRing 24s linear infinite;
+      opacity: 0.6;
+    }
+
+    @keyframes spinRing {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes spinRingReverse {
+      to { transform: rotate(-360deg); }
+    }
+
+    .face-core-glow {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, #e9d5ff 0%, var(--primary) 40%, #4c1d95 80%, #000000 100%);
+      box-shadow: 
+        0 0 60px var(--primary-glow),
+        0 0 100px rgba(34, 211, 238, 0.35),
+        inset 0 0 40px rgba(255, 255, 255, 0.4);
+      animation: faceBreathe 4.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes faceBreathe {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.1); filter: brightness(1.25); }
+    }
+
+    #faceOrbCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* Estados de Animação no #faceMode */
+    #faceMode[data-s="listening"] .face-core-glow {
+      background: radial-gradient(circle at 40% 40%, #cffafe 0%, var(--accent) 40%, #0e7490 80%, #000000 100%);
+      box-shadow: 0 0 80px rgba(34, 211, 238, 0.8), inset 0 0 50px rgba(255, 255, 255, 0.6);
+      animation: faceBreathe 1.5s ease-in-out infinite;
+    }
+    #faceMode[data-s="listening"] .face-ring.r1 { animation-duration: 4s; }
+    #faceMode[data-s="listening"] .face-ring.r2 { animation-duration: 6s; }
+
+    #faceMode[data-s="thinking"] .face-core-glow {
+      background: radial-gradient(circle at 40% 40%, #fef08a 0%, var(--yellow) 40%, #854d0e 80%, #000000 100%);
+      box-shadow: 0 0 90px rgba(234, 179, 8, 0.85), inset 0 0 50px rgba(255, 255, 255, 0.7);
+      animation: faceBreathe 0.6s ease-in-out infinite alternate;
+    }
+    #faceMode[data-s="thinking"] .face-ring.r1 { animation-duration: 2s; }
+    #faceMode[data-s="thinking"] .face-ring.r2 { animation-duration: 3s; }
+
+    #faceMode[data-s="speaking"] .face-core-glow {
+      background: radial-gradient(circle at 40% 40%, #fbcfe8 0%, var(--accent-magenta) 40%, #9f1239 80%, #000000 100%);
+      box-shadow: 0 0 80px rgba(244, 63, 94, 0.8), inset 0 0 40px rgba(255, 255, 255, 0.6);
+      animation: faceBreathe 1.2s ease-in-out infinite;
+    }
+    #faceMode[data-s="speaking"] .face-ring.r1 { animation-duration: 5s; }
+
+    .face-state-headline {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 900;
+      letter-spacing: 0.35em;
+      text-indent: 0.35em;
+      color: #f1f5f9;
+      text-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
+      margin-top: -15px;
+      margin-bottom: 6px;
+    }
+
+    .face-action-hint {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.22em;
+      color: var(--txt3);
+      margin-bottom: 18px;
+    }
+
+    /* Legenda Central do Cockpit */
+    .face-transcript-card {
+      width: min(90%, 640px);
+      background: rgba(14, 7, 26, 0.85);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius);
+      padding: 14px 22px;
+      backdrop-filter: blur(24px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(34, 211, 238, 0.25);
+      text-align: center;
+      position: relative;
+    }
+
+    .face-transcript-line {
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: #f8fafc;
+      font-style: italic;
+    }
+
+    /* Rodapé Ticker */
+    .face-footer-ticker {
+      position: relative;
+      z-index: 10;
+      background: rgba(8, 3, 14, 0.95);
+      border-top: 1px solid var(--border);
+      padding: 10px 24px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.12em;
+      color: var(--txt3);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .ticker-content {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ticker-sep {
+      color: var(--accent);
+      opacity: 0.6;
+    }
+
+    .ticker-key {
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* Responsividade Face Mode */
+    @media (max-width: 960px) {
+      .face-cockpit-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        overflow-y: auto;
+      }
+      .face-orb-hero {
+        width: 320px;
+        height: 320px;
+      }
+      .face-header {
+        padding: 12px 18px;
+      }
+      .face-panel {
+        display: none;
+      }
+    }
+
+    /* Redução de Movimento */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .face-aurora, .face-ring, #faceOrbCanvas {
+        display: none !important;
+      }
+    }
