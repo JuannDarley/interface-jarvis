@@ -9,8 +9,8 @@
         return;
       }
 
-      // A chave da Fish Audio fica no server.py, nunca no navegador.
-      // O navegador chama apenas o endpoint local do nosso servidor.
+      // A chave da Fish Audio fica no backend Java, nunca no navegador.
+      // O navegador chama o endpoint de síntese do backend Java.
       if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
@@ -26,7 +26,7 @@
       setHudStatus("FALANDO...", "#ec4899");
 
       try {
-        const response = await fetch("/api/tts", {
+        const response = await fetch(`${window.JARVIS_API_BASE_URL}/api/tts`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

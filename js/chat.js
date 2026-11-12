@@ -3,7 +3,7 @@
 /* ==========================================================================
        CÉREBRO — BACKEND /api/chat
        ==========================================================================
-       A chave da Groq permanece exclusivamente no server.py.
+       A chave da Groq permanece exclusivamente no backend Java.
        O frontend não envia Authorization nem acessa a GROQ_API_KEY.
        ========================================================================== */
     async function processUserCommand(commandText) {
@@ -15,7 +15,24 @@
       sessionHistory.push({ role: "user", content: commandText });
 
       try {
-        const response = await fetch("/api/chat", {
+        const weatherReply = window.JarvisWeather
+          ? await window.JarvisWeather.answerIfRequested(commandText)
+          : null;
+        if (weatherReply) {
+          sessionHistory.push({ role: "assistant", content: weatherReply });
+          setDialogueText(null, weatherReply);
+          setHudStatus("ONLINE", "#10b981");
+          setOrbState("speaking");
+          speakText(weatherReply, () => {
+            if (isSystemActive) {
+              setOrbState("idle");
+              setHudStatus("OCIOSO", "#c084fc");
+            }
+          });
+          return;
+        }
+
+        const response = await fetch(`${window.JARVIS_API_BASE_URL}/api/chat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -56,7 +73,11 @@
 
         if (saveMatch) {
           const [, area, title, body] = saveMatch;
-          saveNoteFromAI(area, title, body);
+          if (typeof saveNoteFromAI === "function") {
+            saveNoteFromAI(area, title, body);
+          } else {
+            console.warn("Armazenamento de memórias ainda não está disponível no backend Java.");
+          }
           cleanReply = rawReply.replace(saveRegex, "").trim();
         }
 
@@ -75,7 +96,7 @@
 
       } catch (err) {
         console.error("Falha de rede ao comunicar com /api/chat:", err);
-        const netErrSpeech = `Não foi possível estabelecer conexão com o servidor do JARVIS, ${CONFIG.address}. Verifique se o server.py está em execução.`;
+        const netErrSpeech = `Não foi possível estabelecer conexão com o servidor do JARVIS, ${CONFIG.address}. Verifique se o backend Java está em execução.`;
         setDialogueText(null, netErrSpeech);
         speakText(netErrSpeech);
       } finally {

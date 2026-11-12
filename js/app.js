@@ -28,7 +28,7 @@
 
     async function updateServiceStatus() {
       try {
-        const response = await fetch("/health");
+        const response = await fetch(`${window.JARVIS_API_BASE_URL}/health`);
         const status = await response.json();
         const groqStatus = document.getElementById("service-groq-status");
         const ttsStatus = document.getElementById("service-tts-status");

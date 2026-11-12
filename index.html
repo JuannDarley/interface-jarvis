@@ -57,6 +57,23 @@
       </label>
     </header>
 
+    <section class="weather-strip" aria-label="Clima na sua localização">
+      <div class="weather-strip-main">
+        <div class="weather-strip-heading"><span aria-hidden="true">☀</span> CLIMA NA SUA LOCALIZAÇÃO</div>
+        <div class="weather-strip-reading">
+          <strong id="weather-temperature">--°C</strong>
+          <div class="weather-strip-details">
+            <span id="weather-description">Autorize a localização para consultar</span>
+            <small id="weather-status">LOCALIZAÇÃO DESATIVADA</small>
+          </div>
+        </div>
+      </div>
+      <div class="weather-strip-action">
+        <button id="weather-location-button" type="button">PERMITIR LOCALIZAÇÃO</button>
+        <small>As coordenadas serão enviadas à Open-Meteo para consultar o clima.</small>
+      </div>
+    </section>
+
     <!-- Seção do Reator Central -->
     <section class="reactor-section">
       <!-- Status Badge -->
@@ -355,9 +372,14 @@
   <!-- Script Controlador do Cockpit Face Mode -->
 
   <!-- Os scripts clássicos compartilham o estado global e são carregados em ordem de dependência. -->
+  <script>
+    window.JARVIS_API_BASE_URL = window.JARVIS_API_BASE_URL ||
+      (["localhost", "127.0.0.1"].includes(window.location.hostname) ? "http://localhost:8080" : "");
+  </script>
   <script src="js/state.js"></script>
   <script src="js/brain.js"></script>
   <script src="js/voice.js"></script>
+  <script src="js/weather.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
