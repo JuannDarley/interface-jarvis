@@ -19,6 +19,7 @@
 
     function saveNotesToStorage() {
       localStorage.setItem("jarvis_notes", JSON.stringify(currentNotes));
+      window.JarvisNotes?.changed();
       updateBrainStats();
     }
 
@@ -107,8 +108,10 @@
        COMPATIBILIDADE: Injeção da string <svg> via innerHTML do DIV container
        ========================================================================== */
     let synapsePulses = [];
+    let stopSynapsePulses = () => {};
 
     function renderGraph() {
+      stopSynapsePulses();
       updateBrainStats();
       if (synapseAnimationId) {
         cancelAnimationFrame(synapseAnimationId);
@@ -229,7 +232,7 @@
 
       // SVG de Pulso de Sinapses (~12 pontos viajando pelas curvas)
       let synapsesSvg = "";
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < (window.JarvisPerformance?.mobile ? 4 : 12); i++) {
         synapsesSvg += `<circle id="synapse-dot-${i}" r="3" fill="#ffffff" filter="url(#synapseGlow)" opacity="0" />`;
       }
 
@@ -319,7 +322,8 @@
 
     function initSynapsePulses(curves) {
       synapsePulses = [];
-      const numPulses = 12;
+      const mobile = Boolean(window.JarvisPerformance?.mobile);
+      const numPulses = mobile ? 4 : 12;
 
       for (let i = 0; i < numPulses; i++) {
         synapsePulses.push({
@@ -329,9 +333,20 @@
         });
       }
 
-      function stepSynapses() {
+      const dots = synapsePulses.map((_pulse, index) => document.getElementById(`synapse-dot-${index}`));
+      let active = !mobile;
+      let lastFrame = 0;
+      function stepSynapses(timestamp = performance.now()) {
+        synapseAnimationId = null;
+        if (!active) return;
+        if (mobile && lastFrame && timestamp - lastFrame < 50) {
+          synapseAnimationId = requestAnimationFrame(stepSynapses);
+          return;
+        }
+        const advance = lastFrame ? Math.min(4, (timestamp - lastFrame) / (1000 / 60)) : 1;
+        lastFrame = timestamp;
         synapsePulses.forEach((pulse, idx) => {
-          pulse.t += pulse.speed;
+          pulse.t += pulse.speed * advance;
           if (pulse.t >= 1) {
             pulse.t = 0;
             pulse.curveIndex = Math.floor(Math.random() * curves.length);
@@ -349,7 +364,7 @@
           // Opacidade em sino: sin(pi * t)
           const opacity = Math.sin(Math.PI * t) * 0.95;
 
-          const dotElm = document.getElementById(`synapse-dot-${idx}`);
+          const dotElm = dots[idx];
           if (dotElm) {
             dotElm.setAttribute("cx", x.toFixed(1));
             dotElm.setAttribute("cy", y.toFixed(1));
@@ -360,7 +375,25 @@
         synapseAnimationId = requestAnimationFrame(stepSynapses);
       }
 
-      stepSynapses();
+      let disconnect = () => {};
+      if (mobile) {
+        disconnect = window.JarvisPerformance.observeVisibility(graphContainer, visible => {
+          active = visible;
+          if (active && !synapseAnimationId) {
+            lastFrame = 0;
+            synapseAnimationId = requestAnimationFrame(stepSynapses);
+          } else if (!active && synapseAnimationId) {
+            cancelAnimationFrame(synapseAnimationId);
+            synapseAnimationId = null;
+          }
+        });
+      } else stepSynapses();
+      stopSynapsePulses = () => {
+        active = false;
+        disconnect();
+        if (synapseAnimationId) cancelAnimationFrame(synapseAnimationId);
+        synapseAnimationId = null;
+      };
     }
 
     function flashNodeInGraph(nodeId) {

@@ -659,3 +659,5 @@
         display: none !important;
       }
     }
+
+.face-close-label { display: none; }

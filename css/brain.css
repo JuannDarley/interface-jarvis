@@ -357,3 +357,16 @@
         height: 440px;
       }
     }
+
+#notes-sync-status { color: var(--text-muted); max-width: 260px; font-size: 0.72rem; }
+.notes-sync-dialog { margin: auto; width: min(92vw, 520px); padding: 24px; color: #f3e8ff; background: #120a20; border: 1px solid #a855f7; border-radius: 16px; }
+.notes-sync-dialog::backdrop { background: rgba(0, 0, 0, 0.75); }
+.notes-sync-dialog p { margin: 16px 0; }
+.notes-sync-dialog button { display: block; width: 100%; margin-top: 12px; }
+@media (max-width: 600px) {
+  .brain-actions { width: 100%; flex-wrap: wrap; }
+  #notes-sync-status { flex-basis: 100%; max-width: none; }
+  .hud-topbar { padding: 16px; }
+  .jarvis-identity { height: 260px; }
+  .brain-title { font-size: 1rem; overflow-wrap: anywhere; }
+}

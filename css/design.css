@@ -110,7 +110,7 @@
       100% { opacity: 0.8; transform: scale(1.02); }
     }
 
-    #app-container, #screen-boot, #screen-activation {
+    #app-container {
       position: relative;
       z-index: 1;
     }
@@ -327,3 +327,98 @@
       border-color: var(--accent) !important;
       box-shadow: 0 0 20px rgba(34, 211, 238, 0.35) !important;
     }
+
+
+/* Identidade animada acima do painel principal. */
+.jarvis-identity {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: clamp(260px, 32vh, 340px);
+  isolation: isolate;
+}
+
+.jarvis-atom {
+  position: absolute;
+  width: clamp(230px, 28vw, 310px);
+  aspect-ratio: 1;
+  perspective: 700px;
+}
+
+.jarvis-atom-orbit {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(192, 132, 252, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.2);
+  transform: rotateZ(0deg) rotateX(65deg);
+}
+
+.jarvis-atom-orbit:nth-child(2) {
+  transform: rotateZ(60deg) rotateX(65deg);
+  border-color: rgba(34, 211, 238, 0.6);
+}
+
+.jarvis-atom-orbit:nth-child(3) {
+  transform: rotateZ(120deg) rotateX(65deg);
+}
+
+.jarvis-atom-electron {
+  position: absolute;
+  inset: 0;
+  animation: jarvis-electron-orbit 6s linear infinite;
+}
+
+.jarvis-atom-orbit:nth-child(2) .jarvis-atom-electron {
+  animation-duration: 8s;
+  animation-delay: -3s;
+}
+
+.jarvis-atom-orbit:nth-child(3) .jarvis-atom-electron {
+  animation-duration: 7s;
+  animation-delay: -5s;
+}
+
+.jarvis-atom-electron::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: calc(50% - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e9d5ff;
+  box-shadow: 0 0 10px #c084fc, 0 0 24px #a855f7;
+}
+
+.jarvis-atom-orbit:nth-child(2) .jarvis-atom-electron::after {
+  background: #cffafe;
+  box-shadow: 0 0 10px #22d3ee, 0 0 24px #0891b2;
+}
+
+.jarvis-atom-glow {
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.25), transparent 70%);
+  filter: blur(12px);
+}
+
+.jarvis-identity-name {
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  color: #f3e8ff;
+  text-shadow: 0 0 18px rgba(168, 85, 247, 0.7);
+}
+
+@keyframes jarvis-electron-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jarvis-atom-electron { animation: none; }
+}

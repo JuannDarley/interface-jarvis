@@ -68,11 +68,9 @@
       isSystemActive = true;
 
       // Saudação em voz alta e início de escuta imediata
-      const greeting = `Sistemas online. Estou ouvindo, ${CONFIG.address}.`;
+      const greeting = `Sistemas online. Toque no microfone para falar, ${CONFIG.address}.`;
       setDialogueText(null, greeting);
-      speakText(greeting, () => {
-        startListening();
-      });
+      speakText(greeting);
 
       renderGraph();
     });

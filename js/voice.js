@@ -1,7 +1,33 @@
 /* Síntese, reconhecimento de voz, escuta manual e wake word. */
 
+    let listeningRequested = false;
+    let listeningTimeout = null;
+    let speechGeneration = 0;
     let currentAudio = null;
     let currentAudioUrl = null;
+
+    // Mantém os mesmos eventos da Web Speech API usando o reconhecedor do Android.
+    if (window.JarvisAndroidSpeech) {
+      window.SpeechRecognition = class {
+        constructor() {
+          this.active = false;
+          window.addEventListener('jarvis-native-speech', event => {
+            const { type, value } = event.detail;
+            if (type === 'start') this.onstart?.();
+            if (type === 'result') this.onresult?.({ results: [[{ transcript: value }]] });
+            if (type === 'error') { this.active = false; this.onerror?.({ error: value }); }
+            if (type === 'end') { this.active = false; this.onend?.(); }
+          });
+        }
+        start() {
+          if (this.active) return;
+          this.active = true;
+          window.JarvisAndroidSpeech.start();
+        }
+        stop() { this.active = false; window.JarvisAndroidSpeech.stop(); }
+        abort() { this.stop(); }
+      };
+    }
 
     async function speakText(text, onComplete) {
       if (!text || !text.trim()) {
@@ -21,6 +47,8 @@
         currentAudioUrl = null;
       }
 
+      stopListening();
+      const generation = ++speechGeneration;
       isBusy = true;
       setOrbState("speaking");
       setHudStatus("FALANDO...", "#ec4899");
@@ -42,6 +70,7 @@
         }
 
         const audioBlob = await response.blob();
+        if (generation !== speechGeneration) return;
         currentAudioUrl = URL.createObjectURL(audioBlob);
         currentAudio = new Audio(currentAudioUrl);
         currentAudio.preload = "auto";
@@ -53,10 +82,10 @@
           }
           currentAudio = null;
           isBusy = false;
-          setOrbState("listening");
-          setHudStatus("ESCUTANDO...", "#22d3ee");
+          setOrbState("idle");
+          setHudStatus("OCIOSO", "#c084fc");
           if (onComplete) onComplete();
-          restartListeningSafely();
+
         };
 
         currentAudio.onended = finishSpeech;
@@ -67,17 +96,20 @@
 
         await currentAudio.play();
       } catch (error) {
+        if (generation !== speechGeneration) return;
         console.error("Erro no servidor TTS do Jarvis:", error);
         isBusy = false;
         setOrbState("idle");
         setHudStatus("OCIOSO", "#c084fc");
         showToast(`Erro na voz do Jarvis: ${error.message}`);
         if (onComplete) onComplete();
-        restartListeningSafely();
+
       }
     }
 
     function stopSpeaking() {
+      speechGeneration++;
+      stopListening();
       if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
@@ -91,7 +123,7 @@
       setOrbState("idle");
       setHudStatus("OCIOSO", "#c084fc");
       showToast("Fala interrompida.");
-      restartListeningSafely();
+
     }
 
     if (btnStopSpeech) btnStopSpeech.addEventListener("click", stopSpeaking);
@@ -106,10 +138,11 @@
 
       recognition = new SpeechRecognition();
       recognition.lang = "pt-BR";
-      recognition.continuous = true;
+      recognition.continuous = false;
       recognition.interimResults = false;
 
       recognition.onstart = () => {
+        if (!listeningRequested) { recognition.abort(); return; }
         if (!isBusy) {
           setOrbState("listening");
           setHudStatus("ESCUTANDO...", "#22d3ee");
@@ -118,7 +151,7 @@
 
       recognition.onresult = (event) => {
         // ENQUANTO O TTS FALA OU O JARVIS PENSA, IGNORE O RECONHECIMENTO
-        if (isBusy) return;
+        if (isBusy || !listeningRequested) return;
 
         const lastResultIndex = event.results.length - 1;
         const transcript = event.results[lastResultIndex][0].transcript.trim();
@@ -135,30 +168,42 @@
       };
 
       recognition.onend = () => {
-        // Reinicie no onend, mas SÓ quando não estiver ocupado
-        if (!isBusy && isSystemActive) {
-          restartListeningSafely();
-        }
+        stopListening();
       };
     }
 
-    function startListening() {
-      if (!recognition) return;
-      try {
-        recognition.start();
-      } catch (e) {
-        // Ignora caso já esteja rodando ("already started")
+    function stopListening() {
+      const wasListening = listeningRequested;
+      listeningRequested = false;
+      isUserListeningToggled = false;
+      clearTimeout(listeningTimeout);
+      listeningTimeout = null;
+      if (wasListening) recognition?.abort();
+      btnToggleMic.setAttribute("aria-pressed", "false");
+      btnToggleMic.title = "Ativar microfone";
+      if (!isBusy) {
+        setOrbState("idle");
+        setHudStatus("OCIOSO", "#c084fc");
       }
     }
 
-    function restartListeningSafely() {
-      if (!recognition || !isSystemActive || isBusy) return;
+    function startListening() {
+      if (!recognition || isBusy || listeningRequested) return;
+      listeningRequested = true;
+      isUserListeningToggled = true;
+      btnToggleMic.setAttribute("aria-pressed", "true");
+      btnToggleMic.title = "Parar de ouvir";
       try {
         recognition.start();
-      } catch (e) {
-        // Já iniciado
+        listeningTimeout = setTimeout(stopListening, 15000);
+      } catch (error) {
+        stopListening();
       }
     }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopListening();
+    });
 
     // Clique no Orbe ou no botão de Microfone alterna a escuta manual
     reactorOrb.addEventListener("click", () => {
@@ -170,15 +215,17 @@
     });
 
     function triggerManualListening() {
+      if (listeningRequested) {
+        stopListening();
+        showToast("Microfone desligado.");
+        return;
+      }
       if (isBusy) {
         stopSpeaking();
         return;
       }
-      isUserListeningToggled = true;
-      setOrbState("listening");
-      setHudStatus("ESCUTANDO...", "#22d3ee");
       startListening();
-      showToast("Escuta ativa. Fale agora...");
+      if (listeningRequested) showToast("Fale seu comando. A escuta termina automaticamente.");
     }
 
     /* ==========================================================================
@@ -190,7 +237,9 @@
 
     function handleIncomingVoice(rawTranscript) {
       const normalized = normalizeStr(rawTranscript);
-      const wake = CONFIG.wakeWord; // "ola jarvis"
+      const manual = isUserListeningToggled;
+      stopListening();
+      const wake = CONFIG.wakeWord;
 
       // Atualiza visualmente o que o usuário disse
       speechUserText.textContent = `"${rawTranscript}"`;
@@ -202,7 +251,7 @@
       if (hasWakeWord) {
         // Extrai o comando se a frase contiver a wake word seguida do pedido
         let command = rawTranscript;
-        const regexWake = new RegExp(`(olá jarvis|ola jarvis|ei jarvis|jarvis)`, 'gi');
+        const regexWake = new RegExp(`(olá jarvis|ola jarvis|oi jarvis|ei jarvis|jarvis)`, 'gi');
         command = command.replace(regexWake, '').replace(/^[,.\s]+/, '').trim();
 
         if (command.length > 2) {
@@ -211,9 +260,9 @@
           // Apenas chamou a wake word
           const ack = `Às suas ordens, ${CONFIG.address}. Em que posso servi-lo?`;
           setDialogueText(null, ack);
-          speakText(ack);
+          speakText(ack, startListening);
         }
-      } else if (isUserListeningToggled) {
+      } else if (manual) {
         // Se ativado manualmente pelo clique, consome o comando direto
         isUserListeningToggled = false;
         processUserCommand(rawTranscript);

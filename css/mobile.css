@@ -1,0 +1,137 @@
+/* Perfil móvel: mantém a identidade visual com menos repintura e filtros. */
+.mobile-lite body::before { animation: none; }
+.mobile-lite .hud-topbar,
+.mobile-lite .dialogue-box,
+.mobile-lite .brain-section,
+.mobile-lite .modal-card,
+.mobile-lite .modal-overlay,
+.mobile-lite .hud-status-badge,
+.mobile-lite .input-text-command,
+.mobile-lite .weather-strip {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+.mobile-lite #app-container svg [filter] { filter: none !important; }
+.mobile-lite .neural-edge,
+.mobile-lite .breathing-ring { animation: none !important; }
+.mobile-lite .jarvis-atom-glow { filter: none; }
+.mobile-lite .jarvis-atom-orbit { box-shadow: none; }
+.mobile-lite .jarvis-atom-electron::after { box-shadow: 0 0 5px #c084fc; }
+.mobile-lite .orb-core { box-shadow: 0 0 16px rgba(168, 85, 247, 0.35) !important; }
+.mobile-lite .orb-core::after { filter: none; }
+.mobile-lite .face-aurora { animation: none; filter: none; }
+.mobile-lite .offscreen,
+.mobile-lite .offscreen * { animation-play-state: paused !important; }
+
+.mobile-lite .node-group:hover { filter: none; }
+
+.mobile-lite #faceMode * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.mobile-lite #faceMode .face-ring,
+.mobile-lite #faceMode .face-bracket,
+.mobile-lite #faceMode .face-brand-title,
+.mobile-lite #faceMode .face-core-glow { filter: none !important; }
+.mobile-lite #faceMode .face-core-glow { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+
+/* Cockpit móvel com saída fixa no cabeçalho e todos os painéis acessíveis. */
+html.mobile-lite.face-active,
+.mobile-lite.face-active body { overflow: hidden; }
+.mobile-lite #faceMode {
+  height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.mobile-lite #faceMode .face-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 12px;
+  background: #0c0616;
+}
+.mobile-lite .face-brand { grid-column: 1; grid-row: 1; min-width: 0; gap: 8px; }
+.mobile-lite .face-brand-title { font-size: 0.9rem; letter-spacing: 0.1em; }
+.mobile-lite .face-brand-sub { font-size: 0.55rem; letter-spacing: 0.05em; overflow-wrap: anywhere; }
+.mobile-lite #face-btn-close {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 12px;
+  align-self: start;
+}
+.mobile-lite .face-close-label { display: inline; }
+.mobile-lite .face-shortcut-hint { display: none; }
+.mobile-lite .face-status-badge {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: start;
+  align-self: center;
+  padding: 5px 10px;
+  font-size: 0.65rem;
+  gap: 6px;
+}
+.mobile-lite .face-clock-box { grid-column: 2; grid-row: 2; max-width: 130px; min-width: 0; }
+.mobile-lite .face-clock-digits { font-size: 1rem; letter-spacing: 0.05em; }
+.mobile-lite .face-clock-date { font-size: 0.55rem; letter-spacing: 0.02em; white-space: normal; }
+.mobile-lite .face-cockpit-grid {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: visible;
+  min-width: 0;
+  padding: 20px 12px;
+  gap: 20px;
+}
+.mobile-lite .face-stage-center { order: 0; min-width: 0; }
+.mobile-lite .face-panel {
+  display: flex;
+  height: auto;
+  width: 100%;
+  min-width: 0;
+}
+.mobile-lite .face-panel-left { order: 1; }
+.mobile-lite .face-panel-right { order: 2; }
+.mobile-lite .face-card { min-width: 0; box-shadow: none; }
+.mobile-lite #faceMode .face-orb-hero { width: min(72vw, 260px); height: min(72vw, 260px); }
+.mobile-lite .face-state-headline { font-size: 1.5rem; letter-spacing: 0.15em; }
+.mobile-lite .face-action-hint { font-size: 0.6rem; letter-spacing: 0.08em; text-align: center; }
+.mobile-lite .face-transcript-card { width: 100%; padding: 14px; box-shadow: none; }
+.mobile-lite .face-transcript-line,
+.mobile-lite .radar-desc { overflow-wrap: anywhere; white-space: normal; }
+.mobile-lite .face-footer-ticker { flex: 0 0 auto; white-space: normal; padding: 12px; }
+.mobile-lite .ticker-content { display: flex; flex-wrap: wrap; gap: 8px; }
+.mobile-lite .ticker-key { display: none; }
+.mobile-lite .face-scanlines,
+.mobile-lite .face-aurora { display: none; }
+.mobile-lite #faceMode .face-core-glow,
+.mobile-lite #faceMode .face-ring,
+.mobile-lite #faceMode .vu-bar { animation: none !important; }
+
+/* No Android, mantém a identidade sem animações contínuas ou perspectiva 3D. */
+.android-lite .jarvis-atom { perspective: none; }
+.android-lite .jarvis-atom-orbit {
+  inset: 29% 0;
+  transform: rotate(0deg);
+  box-shadow: none;
+}
+.android-lite .jarvis-atom-orbit:nth-child(2) { transform: rotate(60deg); }
+.android-lite .jarvis-atom-orbit:nth-child(3) { transform: rotate(120deg); }
+.android-lite .jarvis-atom-electron {
+  animation: none;
+  transform: rotate(35deg);
+}
+.android-lite .jarvis-atom-electron::after { box-shadow: none; }
+.android-lite .jarvis-atom-glow { display: none; }
+.android-lite .jarvis-identity-name { text-shadow: none; }

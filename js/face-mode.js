@@ -67,6 +67,7 @@
 
         if (targetState) {
           faceMode.classList.add("on");
+          faceMode.scrollTop = 0;
           isFaceOn = true;
           startFaceEngines();
           logFaceEvent("COCKPIT HUD ATIVADO (SISTEMA TOTAL)");
@@ -75,7 +76,14 @@
           isFaceOn = false;
           stopFaceEngines();
         }
+        document.documentElement.classList.toggle('face-active', targetState);
+        window.dispatchEvent(new Event('jarvis:face-mode'));
       };
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopFaceEngines();
+        else if (isFaceOn) startFaceEngines();
+      });
 
       if (faceBtnClose) {
         faceBtnClose.addEventListener("click", () => window.faceModeToggle(false));
@@ -152,6 +160,7 @@
         }
       }
 
+      let radarSnapshot = "";
       // 9. Atualização de Telemetria e Vitals
       function updateFaceTelemetry() {
         // Heap
@@ -170,8 +179,11 @@
 
         // Second Brain Radar Highlights
         if (faceBrainRadar && typeof currentNotes !== "undefined" && Array.isArray(currentNotes)) {
-          faceBrainRadar.innerHTML = "";
           const highlights = currentNotes.slice(0, 3);
+          const nextSnapshot = JSON.stringify(highlights);
+          if (nextSnapshot === radarSnapshot) return;
+          radarSnapshot = nextSnapshot;
+          faceBrainRadar.innerHTML = "";
           highlights.forEach(n => {
             const item = document.createElement("div");
             const heading = document.createElement("div");
@@ -195,13 +207,17 @@
       // 10. Esfera de Fibonacci em 3D no Canvas
       let ctx = null;
       let fibPoints = [];
-      const numPoints = 800;
+      const mobile = Boolean(window.JarvisPerformance?.mobile);
+      const numPoints = mobile ? 96 : 800;
+      let sphereVisible = !mobile;
+      let lastSphereFrame = 0;
       const phi = Math.PI * (3 - Math.sqrt(5)); // Ângulo áureo
       let sphereRotX = 0;
       let sphereRotY = 0;
 
       function initFibonacciSphere() {
         if (!faceOrbCanvas) return;
+        if (mobile) { faceOrbCanvas.width = 360; faceOrbCanvas.height = 360; }
         ctx = faceOrbCanvas.getContext("2d");
         fibPoints = [];
 
@@ -215,12 +231,17 @@
         }
       }
 
-      function drawSphereFrame() {
-        if (!isFaceOn || !ctx) return;
+      function drawSphereFrame(now = performance.now()) {
+        rafSphereId = null;
+        if (!isFaceOn || !ctx || document.hidden || !sphereVisible) return;
+        if (mobile && now - lastSphereFrame < (1000 / 15)) {
+          rafSphereId = requestAnimationFrame(drawSphereFrame);
+          return;
+        }
+        lastSphereFrame = now;
 
         // Medição de FPS
         fpsCount++;
-        const now = performance.now();
         if (now - lastFpsTime >= 1000) {
           currentCalculatedFps = Math.round((fpsCount * 1000) / (now - lastFpsTime));
           fpsCount = 0;
@@ -234,7 +255,7 @@
         const h = faceOrbCanvas.height;
         const cx = w / 2;
         const cy = h / 2;
-        const baseRadius = 145;
+        const baseRadius = mobile ? 118 : 145;
 
         const currentState = faceMode.getAttribute("data-s") || "idle";
         let speedY = 0.007;
@@ -252,8 +273,8 @@
           dynamicRadius = baseRadius + Math.sin(now * 0.004) * 8;
         }
 
-        sphereRotY += speedY;
-        sphereRotX += speedX;
+        sphereRotY += speedY * (mobile ? 4 : 1);
+        sphereRotX += speedX * (mobile ? 4 : 1);
 
         const cosY = Math.cos(sphereRotY);
         const sinY = Math.sin(sphereRotY);
@@ -308,12 +329,13 @@
         updateFaceClock();
         updateFaceTelemetry();
         if (!clockIntervalId) clockIntervalId = setInterval(updateFaceClock, 1000);
-        if (!telemetryIntervalId) telemetryIntervalId = setInterval(updateFaceTelemetry, 2000);
+        if (!telemetryIntervalId) telemetryIntervalId = setInterval(updateFaceTelemetry, mobile ? 5000 : 2000);
 
         initFibonacciSphere();
         if (rafSphereId) cancelAnimationFrame(rafSphereId);
         lastFpsTime = performance.now();
         fpsCount = 0;
+        if (mobile && faceFpsVal) faceFpsVal.textContent = 'ATÉ 15 FPS';
         rafSphereId = requestAnimationFrame(drawSphereFrame);
       }
 
@@ -321,6 +343,24 @@
         if (clockIntervalId) { clearInterval(clockIntervalId); clockIntervalId = null; }
         if (telemetryIntervalId) { clearInterval(telemetryIntervalId); telemetryIntervalId = null; }
         if (rafSphereId) { cancelAnimationFrame(rafSphereId); rafSphereId = null; }
+      }
+
+      if (mobile && faceOrbHero) {
+        const sphereObserver = new IntersectionObserver(entries => {
+          sphereVisible = entries[0].isIntersecting;
+          if (sphereVisible && isFaceOn && !document.hidden && !rafSphereId) {
+            lastSphereFrame = 0;
+            lastFpsTime = performance.now();
+            fpsCount = 0;
+            rafSphereId = requestAnimationFrame(drawSphereFrame);
+          } else if (!sphereVisible) {
+            if (rafSphereId) cancelAnimationFrame(rafSphereId);
+            rafSphereId = null;
+            if (faceFpsVal) faceFpsVal.textContent = 'PAUSADO';
+            if (faceFpsBar) faceFpsBar.style.width = '0%';
+          }
+        }, { root: faceMode, rootMargin: '50px' });
+        sphereObserver.observe(faceOrbHero);
       }
 
       // 11. Espelhamento de Estado com o Jarvis Principal
