@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/design.css">
   <link rel="stylesheet" href="css/face.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/globe.css">
 
 </head>
 <body>
@@ -63,6 +64,7 @@
           <div class="hud-subtitle">MANDATÁRIO & SECOND BRAIN NEURAL</div>
         </div>
       </div>
+      <a id="open-globe" href="#mapa">Mapa</a>
       <label class="context-consent" title="As notas completas do Second Brain serão enviadas à Groq junto com a conversa.">
         <input type="checkbox" id="context-consent">
         <span>Permitir envio das notas à Groq</span>
@@ -392,6 +394,17 @@
     window.JARVIS_API_BASE_URL = window.JARVIS_API_BASE_URL ||
       (window.location.protocol === "file:" ? "http://localhost:8080" : window.location.origin);
   </script>
+  <main id="globe-view" aria-labelledby="globe-title" hidden>
+    <header class="globe-header">
+      <a id="back-to-dashboard" href="#" aria-label="Voltar ao painel">← Painel</a>
+      <h1 id="globe-title" tabindex="-1">Mapa</h1>
+      <button id="reset-globe" type="button" disabled>Recentralizar</button>
+    </header>
+    <div class="globe-content">
+      <div id="globe-map" aria-label="Globo terrestre interativo"></div>
+      <p id="globe-status" role="status" hidden></p>
+    </div>
+  </main>
   <dialog id="notes-sync-conflict" class="notes-sync-dialog">
     <h2>Notas diferentes neste dispositivo e no servidor</h2>
     <p>Escolha a versão que deseja usar. Uma cópia da outra versão será preservada neste dispositivo.</p>
@@ -407,5 +420,6 @@
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
+  <script src="js/globe.js"></script>
 </body>
 </html>

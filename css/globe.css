@@ -1,0 +1,71 @@
+#open-globe {
+  margin-inline-start: auto;
+}
+
+body.globe-active #app-container,
+body.globe-active #screen-boot,
+body.globe-active #screen-activation {
+  display: none;
+}
+
+#globe-view:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: #09080d;
+  color: #eee8fa;
+}
+
+.globe-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #2c233a;
+  padding: 12px;
+}
+
+.globe-header h1 {
+  margin: 0 auto 0 0;
+  font-size: 1rem;
+}
+
+.globe-header button,
+#open-globe,
+#back-to-dashboard {
+  text-decoration: none;
+  padding: 7px 10px;
+  border: 1px solid #49365f;
+  border-radius: 6px;
+  color: #eee8fa;
+  background: #21172e;
+  cursor: pointer;
+}
+
+.globe-header button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.globe-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #050407;
+}
+
+#globe-map {
+  position: absolute;
+  inset: 0;
+}
+
+#globe-status {
+  position: absolute;
+  z-index: 1;
+  inset: 1rem auto auto 1rem;
+  max-width: calc(100% - 5rem);
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #17111f;
+}
