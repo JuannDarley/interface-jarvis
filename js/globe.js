@@ -40,19 +40,35 @@
   }
 
   async function loadDarkStyle() {
-    const response = await fetch("https://demotiles.maplibre.org/globe.json");
+    const response = await fetch("https://tiles.openfreemap.org/styles/liberty");
     if (!response.ok) throw new Error("Mapa-base indisponível.");
-    const style = await response.json();
+    const base = await response.json();
+    const visibleLayers = new Set([
+      "background", "water", "waterway_river", "boundary_3", "boundary_2",
+      "label_state", "label_town", "label_city", "label_city_capital",
+      "label_country_3", "label_country_2", "label_country_1",
+    ]);
     const colors = {
-      background: { "background-color": "#0a080f" },
-      fill: { "fill-color": "#221a30", "fill-outline-color": "#4a395f" },
+      background: { "background-color": "#221a30" },
+      fill: { "fill-color": "#0a080f" },
       line: { "line-color": "#645078" },
-      symbol: { "text-color": "#c6b5df", "text-halo-color": "#14101c" },
+      symbol: { "text-color": "#d0bce9", "text-halo-color": "#14101c" },
     };
-    for (const layer of style.layers) {
+
+    const layers = base.layers.filter(layer => visibleLayers.has(layer.id));
+    for (const layer of layers) {
       layer.paint = { ...layer.paint, ...colors[layer.type] };
+      if (layer.type === "symbol") {
+        layer.layout["text-field"] = ["coalesce", ["get", "name:pt"], ["get", "name"], ["get", "name_en"]];
+      }
     }
-    return style;
+    return {
+      version: 8,
+      projection: { type: "globe" },
+      glyphs: base.glyphs,
+      sources: { openmaptiles: base.sources.openmaptiles },
+      layers,
+    };
   }
 
   let navigation = 0;
@@ -85,7 +101,7 @@
         style,
         ...initialView,
         minZoom: 0.75,
-        maxZoom: 5,
+        maxZoom: 11,
         maxPitch: 0,
         locale: {
           "Map.Title": "Globo terrestre",
