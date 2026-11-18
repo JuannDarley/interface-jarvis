@@ -20,7 +20,21 @@ if [ ! -x "$FACE_PYTHON" ]; then
   exit 1
 fi
 
+# Detecta uma instância existente antes de iniciar qualquer serviço.
+if lsof -nP -iTCP:8080 -sTCP:LISTEN >/dev/null 2>&1; then
+  if curl -fsS --max-time 3 http://127.0.0.1:8080/api/status 2>/dev/null |
+      grep -Eq '"aplicacao"[[:space:]]*:[[:space:]]*"JARVIS"'; then
+    echo "✓ JARVIS já está ativo. Abrindo http://localhost:8080"
+    open "http://localhost:8080"
+    exit 0
+  fi
+  echo "❌ A porta 8080 está ocupada por um serviço que não foi identificado como JARVIS."
+  echo "Encerre esse serviço e execute o inicializador novamente."
+  exit 1
+fi
+
 FACE_API_PID=""
+BROWSER_MONITOR_PID=""
 if curl -fsS --max-time 2 http://127.0.0.1:8000/health >/dev/null 2>&1; then
   echo "✓ Reconhecimento facial já está ativo em http://127.0.0.1:8000"
 else
@@ -41,6 +55,9 @@ fi
 cleanup() {
   echo ""
   echo "Encerrando serviços..."
+  if [ -n "$BROWSER_MONITOR_PID" ]; then
+    kill "$BROWSER_MONITOR_PID" 2>/dev/null || true
+  fi
   if [ -n "$FACE_API_PID" ]; then
     kill "$FACE_API_PID" 2>/dev/null || true
     echo "✓ Servidor de reconhecimento facial encerrado."
@@ -69,6 +86,7 @@ export FACE_UNLOCK_API_URL="http://127.0.0.1:8000"
     sleep 1
   done
 ) &
+BROWSER_MONITOR_PID=$!
 
 echo "→ Iniciando Backend JARVIS (Spring Boot na porta 8080)..."
 zsh -ic 'cd "$1" && ./mvnw spring-boot:run' jarvis "$PROJECT_DIR"
