@@ -398,10 +398,27 @@
     <header class="globe-header">
       <a id="back-to-dashboard" href="#" aria-label="Voltar ao painel">← Painel</a>
       <h1 id="globe-title" tabindex="-1">Mapa</h1>
+      <label title="Aeronaves em até 463 km do centro do mapa"><input id="flights-toggle" type="checkbox" disabled> Tráfego aéreo</label>
+      <button id="flights-southeast" type="button" disabled>Voos no Sudeste</button>
+      <button id="flights-refresh" type="button" disabled>Atualizar região</button>
+      <span id="flights-status" role="status"></span>
+      <label><input id="earthquakes-toggle" type="checkbox" disabled> Terremotos · 24 h</label>
+      <button id="earthquakes-refresh" type="button" disabled>Atualizar terremotos</button>
+      <span id="earthquakes-status" role="status"></span>
+      <label title="Consulta sinais em até 2 graus de cada lado do centro"><input id="vessels-toggle" type="checkbox" disabled> Navios</label>
+      <button id="vessels-santos" type="button" disabled>Porto de Santos</button>
+      <button id="vessels-refresh" type="button" disabled>Atualizar navios</button>
+      <span id="vessels-status" role="status"></span>
+      <button id="map-location-button" type="button" disabled>Minha localização</button>
+      <span id="map-location-status" role="status"></span>
       <button id="reset-globe" type="button" disabled>Recentralizar</button>
     </header>
     <div class="globe-content">
       <div id="globe-map" aria-label="Globo terrestre interativo"></div>
+      <aside id="flight-details" aria-label="Detalhes do voo selecionado" hidden>
+        <button id="flight-details-close" type="button">Fechar detalhes</button>
+        <div id="flight-details-content" aria-live="polite"></div>
+      </aside>
       <p id="globe-status" role="status" hidden></p>
     </div>
   </main>
@@ -420,6 +437,10 @@
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
+  <script src="js/flights.js"></script>
+  <script src="js/earthquakes.js"></script>
+  <script src="js/vessels.js"></script>
+  <script src="js/map-location.js"></script>
   <script src="js/globe.js"></script>
 </body>
 </html>

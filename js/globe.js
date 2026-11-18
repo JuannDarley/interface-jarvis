@@ -80,6 +80,7 @@
     view.hidden = !showMap;
 
     if (!showMap) {
+      document.dispatchEvent(new Event("jarvis:map-close"));
       map?.remove();
       map = undefined;
       resetButton.disabled = true;
@@ -101,7 +102,7 @@
         style,
         ...initialView,
         minZoom: 0.75,
-        maxZoom: 11,
+        maxZoom: 18,
         maxPitch: 0,
         locale: {
           "Map.Title": "Globo terrestre",
@@ -115,6 +116,7 @@
         if (map !== globe) return;
         status.hidden = true;
         resetButton.disabled = false;
+        document.dispatchEvent(new CustomEvent("jarvis:map-ready", { detail: globe }));
       });
       globe.on("error", () => {
         if (map === globe && resetButton.disabled) {
