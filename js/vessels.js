@@ -16,7 +16,8 @@
 
   async function load() {
     if (!map || !toggle.checked) return;
-    clear();
+    request?.abort();
+    popup?.remove();
     const current = map;
     const controller = new AbortController();
     request = controller;
@@ -27,11 +28,14 @@
       const center = map.getCenter();
       const longitude = ((center.lng + 180) % 360 + 360) % 360 - 180;
       const query = new URLSearchParams({
-        latitude: Math.max(-85, Math.min(85, center.lat)), longitude,
+        latitude: Math.max(-85, Math.min(85, center.lat)).toFixed(2),
+        longitude: longitude.toFixed(2),
       });
       const response = await fetch(window.JARVIS_API_BASE_URL + "/api/map/vessels?" + query,
         { signal: controller.signal });
-      const result = await response.json();
+      const result = await response.json().catch(() => {
+        throw new Error("A API de navios não respondeu corretamente. Reinicie o Jarvis e tente novamente.");
+      });
       if (!response.ok) throw new Error(result.error || "Consulta marítima indisponível.");
       if (request !== controller || map !== current) return;
       map.getSource("vessels").setData(result);
@@ -50,15 +54,52 @@
     }
   }
 
+  function addShipIcon(globe) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    const context = canvas.getContext("2d");
+
+    // Bow points north. The map rotates the hull to the reported course.
+    context.beginPath();
+    context.moveTo(32, 3);
+    context.bezierCurveTo(23, 10, 19, 20, 19, 30);
+    context.lineTo(19, 53);
+    context.quadraticCurveTo(19, 59, 25, 59);
+    context.lineTo(39, 59);
+    context.quadraticCurveTo(45, 59, 45, 53);
+    context.lineTo(45, 30);
+    context.bezierCurveTo(45, 20, 41, 10, 32, 3);
+    context.closePath();
+    context.fillStyle = "#b9a1ef";
+    context.strokeStyle = "#eee4ff";
+    context.lineWidth = 2;
+    context.fill();
+    context.stroke();
+
+    context.fillStyle = "#4a3267";
+    context.fillRect(25, 22, 14, 9);
+    context.fillRect(25, 34, 14, 9);
+    context.fillStyle = "#eee4ff";
+    context.fillRect(24, 47, 16, 5);
+    globe.addImage("ship-silhouette", context.getImageData(0, 0, 64, 64));
+  }
+
   document.addEventListener("jarvis:map-ready", event => {
     map = event.detail;
+    addShipIcon(map);
     map.addSource("vessels", {
       type: "geojson", data: { type: "FeatureCollection", features: [] },
     });
     map.addLayer({
-      id: "vessels", type: "circle", source: "vessels",
-      paint: { "circle-radius": 5, "circle-color": "#a89cf0",
-        "circle-stroke-color": "#e0d8ff", "circle-stroke-width": 1.5 },
+      id: "vessels", type: "symbol", source: "vessels",
+      layout: {
+        "icon-image": "ship-silhouette",
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 2, 0.32, 8, 0.48, 14, 0.65],
+        "icon-rotate": ["coalesce", ["get", "course"], 0],
+        "icon-rotation-alignment": "map",
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+      },
     });
     map.on("mouseenter", "vessels", () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", "vessels", () => { map.getCanvas().style.cursor = ""; });
