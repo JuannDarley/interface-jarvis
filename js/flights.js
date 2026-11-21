@@ -7,6 +7,12 @@
   const content = document.getElementById("flight-details-content");
   const close = document.getElementById("flight-details-close");
   const histories = new Map();
+  const preview = document.getElementById("flight-preview");
+  const identityCache = new Map();
+  let hoverFlight;
+  let hoverRequest;
+  let hoverTimer;
+  let hoverPoint;
   let map;
   let request;
   let detailRequest;
@@ -71,6 +77,7 @@
   }
 
   function stop() {
+    hidePreview();
     clearTimeout(timer);
     clearTimeout(moveTimer);
     request?.abort();
@@ -144,16 +151,183 @@
       .sort((a,b) => a.time-b.time).map(p => p.point);
   }
 
+  function aircraftVisual(flight, model) {
+    const figure = document.createElement("figure");
+    figure.className = "flight-aircraft-visual";
+    const registration = model?.registration || flight.registration;
+    const identity = document.createElement("div");
+    identity.className = "flight-aircraft-identity";
+    const typeCode = document.createElement("strong");
+    typeCode.textContent = model?.icao_type || flight.model || "Aeronave";
+    const modelName = document.createElement("span");
+    modelName.textContent = [model?.manufacturer, model?.type].filter(Boolean).join(" ")
+      || "Modelo completo indisponível";
+    const tail = document.createElement("span");
+    tail.textContent = registration ? "Matrícula " + registration : "Matrícula indisponível";
+    identity.append(typeCode, modelName, tail);
+    figure.append(identity);
+
+    const caption = document.createElement("figcaption");
+    caption.textContent = "Identificação do cadastro · ICAO " + flight.id.toUpperCase();
+    figure.append(caption);
+    if (!model) return figure;
+
+    const normalizeRegistration = value => String(value || "").replace(/[^a-z0-9]/gi, "").toUpperCase();
+    const matchingHex = String(model.mode_s || "").toLowerCase() === flight.id;
+    const matchingRegistration = !flight.registration ||
+      normalizeRegistration(flight.registration) === normalizeRegistration(model.registration);
+    if (!matchingHex || !matchingRegistration) {
+      caption.textContent = "Foto indisponível para a identificação recebida.";
+      return figure;
+    }
+
+    function photoUrl(value) {
+      try {
+        const url = new URL(value);
+        const allowedHosts = ["image.airport-data.com", "airport-data.com", "www.airport-data.com"];
+        return url.protocol === "https:" && allowedHosts.includes(url.hostname) ? url.href : null;
+      } catch {
+        return null;
+      }
+    }
+
+    const original = photoUrl(model.url_photo);
+    const thumbnail = photoUrl(model.url_photo_thumbnail);
+    if (!original && !thumbnail) {
+      caption.textContent = "Identificação do cadastro · adsbdb · Foto não disponível.";
+      return figure;
+    }
+    const link = document.createElement("a");
+    link.href = original || thumbnail;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.className = "flight-aircraft-photo-link";
+    const image = document.createElement("img");
+    image.className = "flight-aircraft-photo";
+    image.alt = [model.manufacturer, model.type, registration].filter(Boolean).join(" · ");
+    image.referrerPolicy = "no-referrer";
+    image.decoding = "async";
+    image.hidden = true;
+    let thumbnailTried = false;
+    image.addEventListener("load", () => {
+      if (!figure.isConnected) return;
+      identity.hidden = true;
+      image.hidden = false;
+      caption.textContent = "Foto de cadastro · " + registration + " · Airport-data.com via adsbdb";
+    });
+    image.addEventListener("error", () => {
+      if (!thumbnailTried && thumbnail && thumbnail !== image.src) {
+        thumbnailTried = true;
+        image.src = thumbnail;
+        return;
+      }
+      link.remove();
+      identity.hidden = false;
+      caption.textContent = "Identificação do cadastro · A foto não pôde ser carregada.";
+    });
+    image.src = original || thumbnail;
+    link.append(image);
+    figure.insertBefore(link, identity);
+    return figure;
+  }
+
+  function hidePreview() {
+    clearTimeout(hoverTimer);
+    hoverRequest?.abort();
+    hoverRequest = undefined;
+    hoverFlight = undefined;
+    preview.hidden = true;
+  }
+
+  function positionPreview(point) {
+    if (!map || !point) return;
+    const container = map.getContainer();
+    const width = preview.offsetWidth;
+    const height = preview.offsetHeight;
+    let left = point.x + 20;
+    if (left + width > container.clientWidth - 12) left = point.x - width - 20;
+    const top = Math.min(point.y + 12, container.clientHeight - height - 12);
+    preview.style.left = Math.max(12, left) + "px";
+    preview.style.top = Math.max(12, top) + "px";
+  }
+
+  function renderPreview(flight, model, loading = false) {
+    const p = flight.properties;
+    preview.replaceChildren();
+    const heading = document.createElement("strong");
+    heading.className = "flight-preview-title";
+    heading.textContent = p.callsign || p.registration || p.id;
+    const visual = aircraftVisual(p, model);
+    for (const link of visual.querySelectorAll("a")) link.tabIndex = -1;
+    const modelLine = document.createElement("p");
+    modelLine.textContent = model
+      ? [model.manufacturer, model.type].filter(Boolean).join(" ")
+      : p.model || "Modelo indisponível";
+    const summary = document.createElement("p");
+    summary.textContent = p.altitude + " · " + p.speed;
+    const hint = document.createElement("small");
+    hint.textContent = loading ? "Carregando foto e modelo…" : "Clique no avião para ver os detalhes";
+    preview.append(heading, visual, modelLine, summary, hint);
+    preview.hidden = false;
+    positionPreview(hoverPoint);
+    const image = visual.querySelector("img");
+    image?.addEventListener("load", () => {
+      if (hoverFlight?.properties.id === p.id) positionPreview(hoverPoint);
+    });
+    image?.addEventListener("error", () => {
+      if (hoverFlight?.properties.id === p.id) positionPreview(hoverPoint);
+    });
+  }
+
+  function showPreview(event) {
+    const flight = event.features?.[0];
+    if (!flight || map.isMoving()) return;
+    hoverPoint = event.point;
+    if (hoverFlight?.properties.id === flight.properties.id) {
+      positionPreview(hoverPoint);
+      return;
+    }
+    hidePreview();
+    hoverFlight = flight;
+    const cached = identityCache.get(flight.properties.id);
+    const fresh = cached && cached.expiresAt > Date.now();
+    renderPreview(flight, fresh ? cached.model : undefined, !fresh);
+    if (fresh) return;
+
+    hoverTimer = setTimeout(async () => {
+      const controller = new AbortController();
+      hoverRequest = controller;
+      try {
+        const response = await fetch(window.JARVIS_API_BASE_URL + "/api/map/aircraft/" +
+          flight.properties.id + "/identity", { signal: controller.signal });
+        if (!response.ok) throw new Error("Identificação indisponível.");
+        const data = await response.json();
+        if (hoverRequest !== controller || controller.signal.aborted) return;
+        const model = data.aircraft;
+        if (identityCache.size >= 128) identityCache.delete(identityCache.keys().next().value);
+        identityCache.set(flight.properties.id, {
+          model, expiresAt: Date.now() + (model ? 3600000 : 60000),
+        });
+        renderPreview(flight, model);
+      } catch (error) {
+        if (!controller.signal.aborted && hoverRequest === controller) renderPreview(flight);
+      } finally {
+        if (hoverRequest === controller) hoverRequest = undefined;
+      }
+    }, 250);
+  }
+
   function renderDetails() {
     const flight = aircraft.find(item => item.properties.id === selected);
     if (!flight) return;
     const p = flight.properties;
-    const model = selectedDetails?.aircraft?.aircraft;
+    const model = selectedDetails?.aircraft?.aircraft ||
+      identityCache.get(p.id)?.model;
     const route = selectedDetails?.route?.flightroute;
     content.replaceChildren();
     const heading = document.createElement("h2");
     heading.textContent = p.callsign || p.registration || p.id;
-    content.append(heading);
+    content.append(heading, aircraftVisual(p, model));
     row("Aeronave", model ? [model.manufacturer, model.type].filter(Boolean).join(" ") : p.model);
     row("Matrícula", model?.registration || p.registration);
     row("Operador", route?.airline?.name || model?.registered_owner);
@@ -189,6 +363,7 @@
   }
 
   async function select(flight) {
+    hidePreview();
     deselect();
     selected = flight.properties.id;
     panel.hidden = false;
@@ -249,6 +424,9 @@
             speed:Number.isFinite(a.gs) ? Math.round(a.gs*1.852)+" km/h" : "Indisponível",
             positionTime:result.observedAt-a.seen_pos*1000},
         }));
+      if (hoverFlight && !aircraft.some(item => item.properties.id === hoverFlight.properties.id)) {
+        hidePreview();
+      }
       lastObservedAt = result.observedAt;
       for (const flight of aircraft) {
         const id=flight.properties.id;
@@ -299,7 +477,12 @@
       "icon-allow-overlap":true,"icon-ignore-placement":true,
     }});
     map.on("mouseenter","flights",() => {map.getCanvas().style.cursor="pointer";});
-    map.on("mouseleave","flights",() => {map.getCanvas().style.cursor="";});
+    map.on("mousemove", "flights", showPreview);
+    map.on("mouseleave","flights",() => {
+      map.getCanvas().style.cursor="";
+      hidePreview();
+    });
+    map.on("movestart", hidePreview);
     map.on("click","flights",event => select(event.features[0]));
     map.on("moveend",() => {
       clearTimeout(moveTimer);

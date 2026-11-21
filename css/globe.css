@@ -117,3 +117,67 @@ body.globe-active #screen-activation {
   font-size: 0.8rem;
   color: #c6b5df;
 }
+
+.flight-aircraft-visual {
+  margin: 0 0 16px;
+}
+.flight-aircraft-photo-link {
+  display: block;
+}
+.flight-aircraft-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 7px;
+}
+.flight-aircraft-photo[hidden],
+.flight-aircraft-identity[hidden] {
+  display: none;
+}
+.flight-aircraft-identity {
+  display: grid;
+  gap: 8px;
+  padding: 18px 14px;
+  border: 1px solid #59406f;
+  border-radius: 7px;
+  background: #251832;
+}
+.flight-aircraft-identity strong {
+  color: #e2b7ff;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+}
+.flight-aircraft-identity span {
+  font-size: 0.85rem;
+  color: #e4d4f3;
+}
+.flight-aircraft-visual figcaption {
+  margin-top: 7px;
+  color: #b7a0c8;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+#flight-preview {
+  position: absolute;
+  z-index: 4;
+  width: min(260px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #6a4c83;
+  border-radius: 10px;
+  background: rgb(18 12 26 / 97%);
+  color: #eee4ff;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+  pointer-events: none;
+}
+#flight-preview[hidden] { display: none; }
+.flight-preview-title { display: block; margin-bottom: 8px; font-size: 0.95rem; }
+#flight-preview .flight-aircraft-visual { margin: 0 0 8px; }
+#flight-preview .flight-aircraft-photo { max-height: 145px; object-fit: contain; }
+#flight-preview .flight-aircraft-identity { padding: 10px; gap: 5px; }
+#flight-preview .flight-aircraft-identity strong { font-size: 1.4rem; }
+#flight-preview p { margin: 6px 0; font-size: 0.8rem; }
+#flight-preview small { color: #bca4d2; font-size: 0.7rem; }
