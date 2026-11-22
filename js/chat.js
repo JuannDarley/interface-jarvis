@@ -20,6 +20,7 @@
           : null;
         if (weatherReply) {
           sessionHistory.push({ role: "assistant", content: weatherReply });
+          window.JarvisAccount?.recordTurn(commandText, weatherReply);
           setDialogueText(null, weatherReply);
           setHudStatus("ONLINE", "#10b981");
           setOrbState("speaking");
@@ -47,10 +48,11 @@
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          console.error("Erro no backend /api/chat:", response.status, data);
+          console.error("Erro no backend /api/chat:", response.status);
           const errorSpeech = data.error
             ? `Aviso: ${data.error} ${CONFIG.address}.`
             : `Aviso: Falha na comunicação com o servidor do JARVIS, ${CONFIG.address}.`;
+          window.JarvisAccount?.recordTurn(commandText, errorSpeech);
           setDialogueText(null, errorSpeech);
           speakText(errorSpeech);
           return;
@@ -60,6 +62,7 @@
 
         if (!rawReply) {
           const emptySpeech = `Compreendido, ${CONFIG.address}. Nenhuma informação textual foi retornada pelo servidor.`;
+          window.JarvisAccount?.recordTurn(commandText, emptySpeech);
           setDialogueText(null, emptySpeech);
           speakText(emptySpeech);
           return;
@@ -82,6 +85,7 @@
         }
 
         sessionHistory.push({ role: "assistant", content: cleanReply });
+        window.JarvisAccount?.recordTurn(commandText, cleanReply);
 
         setDialogueText(null, cleanReply);
         setHudStatus("ONLINE", "#10b981");
@@ -97,6 +101,7 @@
       } catch (err) {
         console.error("Falha de rede ao comunicar com /api/chat:", err);
         const netErrSpeech = `Não foi possível estabelecer conexão com o servidor do JARVIS, ${CONFIG.address}. Verifique se o backend Java está em execução.`;
+        window.JarvisAccount?.recordTurn(commandText, netErrSpeech);
         setDialogueText(null, netErrSpeech);
         speakText(netErrSpeech);
       } finally {

@@ -1,0 +1,18 @@
+#open-account { border:1px solid #708a9b; color:#dbedff; background:#141923; border-radius:5px; padding:9px 12px; font:11px var(--font-mono); cursor:pointer; }
+.account-dialog { width:min(720px,calc(100% - 24px)); max-height:90dvh; margin:auto; padding:22px; border:1px solid #9563bd; border-radius:12px; background:#101019; color:#edf2fc; overflow:auto; }
+.account-dialog::backdrop { background:#000b; }
+.account-dialog header,.account-actions,.account-avatar-row { display:flex; align-items:center; gap:12px; justify-content:space-between; flex-wrap:wrap; }
+.account-dialog h2 { font:14px var(--font-display); }.account-dialog h3 { font:13px var(--font-mono); margin:18px 0 8px; color:#9debf8; }
+.account-dialog label { display:grid; gap:7px; font:12px var(--font-mono); margin:12px 0; }
+.account-dialog input:not([type=checkbox]),.account-dialog textarea { width:100%; padding:10px; border:1px solid #59446e; border-radius:5px; color:#f8f3ff; background:#191321; }
+.account-dialog .account-check { display:flex; gap:10px; align-items:center; }
+.account-dialog button,#note-image-upload { padding:8px 11px; background:#221930; color:#ebd9ff; border:1px solid #71528e; border-radius:5px; cursor:pointer; }
+.account-dialog p,#note-images-status { font:11px/1.6 var(--font-mono); color:#c2bcd0; margin:10px 0; }
+#account-avatar { width:72px; height:72px; object-fit:cover; border-radius:50%; border:1px solid #9ce6ef; }
+.account-images,#note-images { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+.account-image-card { width:145px; border:1px solid #58436b; border-radius:6px; padding:7px; display:grid; gap:8px; }
+.account-image-card img { width:100%; height:100px; object-fit:contain; }.account-image-card small { color:#c5bbd1; font-size:10px; overflow-wrap:anywhere; }
+.account-history article { border-left:2px solid #7752a1; padding:10px; margin:10px 0; background:#171320; font-size:12px; }.account-history p { white-space:pre-wrap; overflow-wrap:anywhere; }.account-history time { color:#9ab4c5; font-size:10px; }
+#note-image-field { padding-top:10px; border-top:1px solid #5c3d73; }
+html.jarvis-reduced-motion *,html.jarvis-reduced-motion *::before,html.jarvis-reduced-motion *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+@media(max-width:600px) { .account-dialog { padding:16px; }.account-actions { justify-content:flex-start; }#open-account { order:4; } }

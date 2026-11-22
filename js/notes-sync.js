@@ -8,6 +8,24 @@ window.JarvisNotes = (() => {
   const snapshot = () => JSON.stringify(currentNotes);
   const dirty = () => baseline !== null && snapshot() !== baseline;
 
+  // Device-local, immutable first snapshot plus a short history. Never sent to logs or telemetry.
+  function backup(reason, notes = currentNotes) {
+    try {
+    const entry = { createdAt: new Date().toISOString(), reason, origin: window.location.origin,
+      revision, notes: JSON.parse(JSON.stringify(notes)) };
+    if (!localStorage.getItem('jarvis_notes_before_database_sync')) {
+      localStorage.setItem('jarvis_notes_before_database_sync', JSON.stringify(entry));
+    }
+    const archiveKey = 'jarvis_notes_backups_v1';
+    let archive;
+    try { archive = JSON.parse(localStorage.getItem(archiveKey) || '[]'); } catch (_) { archive = []; }
+    if (!Array.isArray(archive)) archive = [];
+    if (JSON.stringify(archive.at(-1)?.notes) !== JSON.stringify(entry.notes)) {
+      localStorage.setItem(archiveKey, JSON.stringify([...archive.slice(-19), entry]));
+    }
+    } catch (_) { throw Object.assign(new Error('backup-unavailable'), { code: 'backup-unavailable' }); }
+  }
+
   function remember() {
     baseline = snapshot();
     localStorage.setItem(key, JSON.stringify({ revision, baseline }));
@@ -25,6 +43,7 @@ window.JarvisNotes = (() => {
   }
 
   function apply(document) {
+    backup('before-server-apply');
     currentNotes = document.notes;
     revision = document.revision;
     localStorage.setItem('jarvis_notes', snapshot());
@@ -40,14 +59,18 @@ window.JarvisNotes = (() => {
     queued = false;
     const submitted = snapshot();
     try {
+      backup('before-upload', JSON.parse(submitted));
       const result = await request('PUT', { initialized: true, revision, notes: JSON.parse(submitted) });
       revision = result.revision;
       baseline = submitted;
       localStorage.setItem(key, JSON.stringify({ revision, baseline }));
       status().textContent = dirty() ? 'Salvando alterações...' : 'Notas sincronizadas';
     } catch (error) {
-      status().textContent = error.status === 409
+      status().textContent = error.code === 'backup-unavailable'
+        ? 'Backup local indisponível · libere espaço antes de sincronizar'
+        : error.status === 409
         ? 'Notas alteradas em outro dispositivo. Sincronize para revisar.'
+        : error.status === 503 ? 'Banco/servidor indisponível · alterações preservadas neste dispositivo'
         : 'Alterações preservadas neste dispositivo';
       if (error.status === 409) ready = false;
     } finally {
@@ -61,6 +84,7 @@ window.JarvisNotes = (() => {
     busy = true;
     status().textContent = 'Conectando notas...';
     try {
+      backup('before-synchronize');
       const remote = await request('GET');
       if (!Array.isArray(remote.notes) || !Number.isInteger(remote.revision)) throw new Error('invalid-notes');
       const stored = JSON.parse(localStorage.getItem(key) || 'null');
@@ -79,9 +103,11 @@ window.JarvisNotes = (() => {
         status().textContent = 'Escolha quais notas sincronizar';
         dialog().showModal();
       }
-    } catch (_) {
+    } catch (error) {
       ready = false;
-      status().textContent = 'Notas locais · servidor ainda não configurado ou indisponível';
+      status().textContent = error.code === 'backup-unavailable'
+        ? 'Backup local indisponível · notas mantidas, sincronização suspensa'
+        : 'Notas locais · servidor ainda não configurado ou indisponível';
     } finally {
       busy = false;
       if (queued && ready && !conflict) upload();
@@ -104,6 +130,7 @@ window.JarvisNotes = (() => {
       dialog().close();
     });
     document.getElementById('notes-use-local').addEventListener('click', () => {
+      backup('server-conflict-version', conflict.notes);
       localStorage.setItem('jarvis_notes_server_backup', JSON.stringify(conflict));
       revision = conflict.revision;
       conflict = null;
