@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/globe.css">
   <link rel="stylesheet" href="css/interface-hud.css">
   <link rel="stylesheet" href="css/reference-hud.css">
+  <link rel="stylesheet" href="css/account.css">
 
 </head>
 <body>
@@ -84,6 +85,7 @@
         <span class="hud-map-icon">🛰</span>
         <span>MAPA GLOBAL</span>
       </a>
+      <button id="open-account" type="button" aria-haspopup="dialog">MEU PERFIL</button>
       <label class="context-consent" title="As notas completas do Second Brain serão enviadas à Groq junto com a conversa.">
         <input type="checkbox" id="context-consent">
         <span>Permitir envio das notas à Groq</span>
@@ -224,6 +226,7 @@
         <textarea id="modal-textarea-body" class="modal-textarea" placeholder="Descreva os fatos e contextos relevantes..."></textarea>
       </div>
 
+      <section id="note-image-field"><label for="note-image-file">IMAGENS DA NOTA</label><input id="note-image-file" type="file" accept="image/png,image/jpeg"><button id="note-image-upload" type="button">ANEXAR IMAGEM</button><small>As cópias são otimizadas até 1600 px; o arquivo original permanece no dispositivo.</small><p id="note-images-status" role="status"></p><div id="note-images"></div></section>
       <div class="modal-actions">
         <button id="btn-delete-current-note" class="btn-delete-note">EXCLUIR NOTA</button>
         <button id="btn-save-current-note" class="btn-save-note">SALVAR ALTERAÇÕES</button>
@@ -501,11 +504,26 @@
     <button id="notes-use-local" class="btn-brain-tool" type="button">ENVIAR NOTAS DESTE DISPOSITIVO</button>
     <button id="notes-cancel-sync" class="btn-brain-tool" type="button">CANCELAR</button>
   </dialog>
+  <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-title">
+    <header><h2 id="account-title">MEU PERFIL & MEMÓRIA</h2><button id="account-close" type="button" aria-label="Fechar perfil">✕</button></header>
+    <p id="account-status" role="status">Conectando...</p>
+    <form id="account-form">
+      <div class="account-avatar-row"><img id="account-avatar" alt="Foto do perfil" hidden><label>Foto do perfil <input id="account-photo" disabled type="file" accept="image/png,image/jpeg"></label></div>
+      <label>Nome <input id="account-name" disabled maxlength="120" autocomplete="name"></label>
+      <label>Sobre você <textarea id="account-bio" disabled maxlength="2000" rows="3"></textarea></label>
+      <label class="account-check"><input id="account-motion" disabled type="checkbox"> Reduzir animações</label>
+      <div class="account-actions"><button id="account-save" type="submit" disabled>SALVAR PERFIL</button><button id="account-reload" type="button">RECARREGAR PERFIL</button></div>
+    </form>
+    <section><h3>Imagens guardadas</h3><p>PNG/JPEG · até 5 MB por arquivo · cópias otimizadas até 1600 px · 100 imagens e 100 MB por usuário. A foto do perfil não altera o reconhecimento facial.</p><div id="account-images" class="account-images"></div></section>
+    <section><h3>Conversas salvas</h3><p>Últimas 50 conversas. O restante permanece no banco.</p><button id="account-history-refresh" type="button">ATUALIZAR HISTÓRICO</button><div id="account-history" class="account-history"></div></section>
+  </dialog>
+
   <script src="js/state.js"></script>
   <script src="js/brain.js"></script>
   <script src="js/notes-sync.js"></script>
   <script src="js/voice.js"></script>
   <script src="js/weather.js"></script>
+  <script src="js/account.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
