@@ -3,6 +3,18 @@ set -e
 
 INTERFACE_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$INTERFACE_DIR/../jarvis" && pwd)"
+# The normal launcher opens the native app. Web development is explicit opt-in.
+if [ "${1:-}" != "--web-dev" ]; then
+  APP_PATH="${JARVIS_DESKTOP_APP_PATH:-$PROJECT_DIR/desktop/dist/mac-arm64/JARVIS.app}"
+  APP_BINARY="$APP_PATH/Contents/MacOS/JARVIS"
+  if [ ! -x "$APP_BINARY" ]; then
+    echo "Não encontrei o aplicativo JARVIS atualizado. Gere ou abra a versão macOS do projeto."
+    exit 1
+  fi
+  echo "Abrindo o aplicativo JARVIS. Ctrl+C encerra esta sessão e libera a câmera."
+  exec "$APP_BINARY"
+fi
+
 FACE_FRONTEND_DIR="$(cd "$INTERFACE_DIR/../face-unlock-frontend" && pwd)"
 FACE_API_DIR="$(cd "$INTERFACE_DIR/../face-unlock" && pwd)"
 FACE_PYTHON="$FACE_API_DIR/.venv/bin/python"

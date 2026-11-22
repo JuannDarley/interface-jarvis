@@ -7,6 +7,7 @@
   const resetButton = document.getElementById("reset-globe");
   const mapLibreUrl = "https://unpkg.com/maplibre-gl@5.6.2/dist";
   const initialView = { center: [-51, -16], zoom: 1.25, pitch: 0, bearing: 0 };
+  const mobile = /JARVISAndroid|Android/i.test(navigator.userAgent);
   let map;
   let savedView = initialView;
   let savedLayers;
@@ -105,6 +106,7 @@
       const [, style] = await Promise.all([loadLibrary(), loadDarkStyle()]);
       if (run !== navigation) return;
       const engine = window.maplibregl;
+      if (mobile) engine.setWorkerCount(1);
       const globe = new engine.Map({
         container,
         style,
@@ -112,6 +114,12 @@
         minZoom: 0.75,
         maxZoom: 18,
         maxPitch: 0,
+        ...(mobile ? {
+          pixelRatio: 1,
+          maxTileCacheSize: 32,
+          fadeDuration: 0,
+          canvasContextAttributes: { antialias: false, preserveDrawingBuffer: false },
+        } : {}),
         locale: {
           "Map.Title": "Globo terrestre",
           "NavigationControl.ZoomIn": "Aproximar",
@@ -140,6 +148,17 @@
             input.dispatchEvent(new Event('change'));
           }
         }
+      });
+      globe.getCanvas().addEventListener("webglcontextlost", event => {
+        event.preventDefault();
+        if (map !== globe) return;
+        // Release layers and polling instead of repeatedly trying to restore a failing GPU context.
+        document.dispatchEvent(new Event("jarvis:map-close"));
+        map = undefined;
+        globe.remove();
+        resetButton.disabled = true;
+        status.hidden = false;
+        status.textContent = "O celular interrompeu o mapa. Volte ao painel e tente novamente.";
       });
       globe.on("error", () => {
         if (map === globe && resetButton.disabled) {
