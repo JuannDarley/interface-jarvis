@@ -1,0 +1,187 @@
+#open-globe {
+  margin-inline-start: auto;
+}
+
+body.globe-active #app-container,
+body.globe-active #screen-boot,
+body.globe-active #screen-activation {
+  display: none;
+}
+
+#globe-view:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: #09080d;
+  color: #eee8fa;
+}
+
+.globe-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #2c233a;
+  padding: 12px;
+}
+
+.globe-header h1 {
+  margin: 0 auto 0 0;
+  font-size: 1rem;
+}
+
+.globe-header button,
+#open-globe,
+#back-to-dashboard {
+  text-decoration: none;
+  padding: 7px 10px;
+  border: 1px solid #49365f;
+  border-radius: 6px;
+  color: #eee8fa;
+  background: #21172e;
+  cursor: pointer;
+}
+
+.globe-header button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.globe-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #050407;
+}
+
+#globe-map {
+  position: absolute;
+  inset: 0;
+}
+
+#globe-status {
+  position: absolute;
+  z-index: 1;
+  inset: 1rem auto auto 1rem;
+  max-width: calc(100% - 5rem);
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #17111f;
+}
+
+#flights-status { font-size: 0.8rem; color: #c6b5df; }
+#globe-map .maplibregl-popup-content { background: #21172e; color: #eee8fa; }
+#globe-map .maplibregl-popup-tip { border-top-color: #21172e; }
+
+#earthquakes-status { font-size: 0.8rem; color: #c6b5df; }
+#globe-map .maplibregl-popup-content a { color: #d9b5ff; }
+#globe-map .maplibregl-popup-content p { margin: 8px 0; }
+
+#vessels-status { font-size: 0.8rem; color: #c6b5df; }
+.globe-header input[type="checkbox"] { accent-color: #b991ec; }
+
+#flight-details {
+  position: absolute;
+  z-index: 3;
+  top: 16px;
+  left: 16px;
+  width: min(320px, calc(100% - 80px));
+  max-height: calc(100% - 70px);
+  overflow: auto;
+  padding: 18px;
+  box-sizing: border-box;
+  border: 1px solid #59406f;
+  border-radius: 10px;
+  background: rgb(18 12 26 / 96%);
+  color: #efe4fa;
+}
+#flight-details[hidden] { display: none; }
+#flight-details h2 { margin: 16px 0; font-size: 1.2rem; }
+#flight-details p { margin: 10px 0; font-size: 0.85rem; }
+#flight-details p span { display: block; color: #baa5cd; }
+#flight-details .flight-note { color: #b7a0c8; font-size: 0.75rem; line-height: 1.5; }
+#flight-details-close {
+  border: 1px solid #59406f;
+  background: #271a35;
+  color: #efe4fa;
+  border-radius: 5px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+@media (max-width: 600px) {
+  #flight-details { top: auto; bottom: 32px; max-height: 48%; width: calc(100% - 32px); }
+}
+
+#map-location-status {
+  font-size: 0.8rem;
+  color: #c6b5df;
+}
+
+.flight-aircraft-visual {
+  margin: 0 0 16px;
+}
+.flight-aircraft-photo-link {
+  display: block;
+}
+.flight-aircraft-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 7px;
+}
+.flight-aircraft-photo[hidden],
+.flight-aircraft-identity[hidden] {
+  display: none;
+}
+.flight-aircraft-identity {
+  display: grid;
+  gap: 8px;
+  padding: 18px 14px;
+  border: 1px solid #59406f;
+  border-radius: 7px;
+  background: #251832;
+}
+.flight-aircraft-identity strong {
+  color: #e2b7ff;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+}
+.flight-aircraft-identity span {
+  font-size: 0.85rem;
+  color: #e4d4f3;
+}
+.flight-aircraft-visual figcaption {
+  margin-top: 7px;
+  color: #b7a0c8;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+#flight-preview {
+  position: absolute;
+  z-index: 4;
+  width: min(260px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #6a4c83;
+  border-radius: 10px;
+  background: rgb(18 12 26 / 97%);
+  color: #eee4ff;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+  pointer-events: none;
+}
+#flight-preview[hidden] { display: none; }
+.flight-preview-title { display: block; margin-bottom: 8px; font-size: 0.95rem; }
+#flight-preview .flight-aircraft-visual { margin: 0 0 8px; }
+#flight-preview .flight-aircraft-photo { max-height: 145px; object-fit: contain; }
+#flight-preview .flight-aircraft-identity { padding: 10px; gap: 5px; }
+#flight-preview .flight-aircraft-identity strong { font-size: 1.4rem; }
+#flight-preview p { margin: 6px 0; font-size: 0.8rem; }
+#flight-preview small { color: #bca4d2; font-size: 0.7rem; }
+
+#webcams-status { font-size: 0.8rem; color: #c6b5df; }
+.webcam-details img { display: block; max-width: 100%; height: auto; margin: 10px 0; border-radius: 6px; }
+.webcam-details { max-height: 65dvh; overflow: auto; }

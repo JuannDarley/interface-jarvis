@@ -12,6 +12,9 @@
   <link rel="stylesheet" href="css/design.css">
   <link rel="stylesheet" href="css/face.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/globe.css">
+  <link rel="stylesheet" href="css/interface-hud.css">
+  <link rel="stylesheet" href="css/reference-hud.css">
 
 </head>
 <body>
@@ -44,31 +47,21 @@
        ====================================================================== -->
   <div id="app-container">
 
-    <section class="jarvis-identity" aria-label="JARVIS">
+    <!-- Topbar HUD -->
+    <header class="hud-topbar">
+      <div class="hud-identity jarvis-identity">
       <div class="jarvis-atom" aria-hidden="true">
         <div class="jarvis-atom-orbit"><div class="jarvis-atom-electron"></div></div>
         <div class="jarvis-atom-orbit"><div class="jarvis-atom-electron"></div></div>
         <div class="jarvis-atom-orbit"><div class="jarvis-atom-electron"></div></div>
         <div class="jarvis-atom-glow"></div>
       </div>
-      <h1 class="jarvis-identity-name">JARVIS</h1>
-    </section>
 
-    <!-- Topbar HUD -->
-    <header class="hud-topbar">
-      <div class="hud-identity">
-        <div class="hud-pulse-dot"></div>
         <div>
           <div class="hud-title">JARVIS MK-V</div>
           <div class="hud-subtitle">MANDATÁRIO & SECOND BRAIN NEURAL</div>
         </div>
       </div>
-      <label class="context-consent" title="As notas completas do Second Brain serão enviadas à Groq junto com a conversa.">
-        <input type="checkbox" id="context-consent">
-        <span>Permitir envio das notas à Groq</span>
-      </label>
-    </header>
-
     <section class="weather-strip" aria-label="Clima na sua localização">
       <div class="weather-strip-main">
         <div class="weather-strip-heading"><span aria-hidden="true">☀</span> CLIMA NA SUA LOCALIZAÇÃO</div>
@@ -86,6 +79,16 @@
         <small>As coordenadas serão enviadas à Open-Meteo para o clima e à BigDataCloud para identificar a cidade.</small>
       </div>
     </section>
+
+      <a id="open-globe" href="#mapa" class="btn-hud-map" title="Abrir mapa tático global">
+        <span class="hud-map-icon">🛰</span>
+        <span>MAPA GLOBAL</span>
+      </a>
+      <label class="context-consent" title="As notas completas do Second Brain serão enviadas à Groq junto com a conversa.">
+        <input type="checkbox" id="context-consent">
+        <span>Permitir envio das notas à Groq</span>
+      </label>
+    </header>
 
     <!-- Seção do Reator Central -->
     <section class="reactor-section">
@@ -122,7 +125,7 @@
           <div class="dialogue-label assistant">
             <span>◆</span> JARVIS
           </div>
-          <div id="speech-jarvis-text" class="dialogue-text">Sistemas prontos. Às suas ordens, senhor.</div>
+          <div id="speech-jarvis-text" class="dialogue-text" aria-live="polite" aria-atomic="true">Sistemas prontos. Às suas ordens, senhor.</div>
         </div>
       </div>
 
@@ -227,6 +230,8 @@
       </div>
     </div>
   </div>
+
+  <details class="keyboard-help"><summary>ATALHOS DO SISTEMA</summary><p>/ Comando · M Mapa · F Cockpit · Esc Voltar/fechar detalhes · Espaço Segure para falar (microfone disponível)</p></details>
 
   <!-- Toast Notification -->
   <div id="toast-msg">Notificação do sistema</div>
@@ -392,6 +397,103 @@
     window.JARVIS_API_BASE_URL = window.JARVIS_API_BASE_URL ||
       (window.location.protocol === "file:" ? "http://localhost:8080" : window.location.origin);
   </script>
+  <main id="globe-view" aria-labelledby="globe-title" hidden>
+    <header class="globe-header">
+      <!-- Bloco Esquerdo: Retorno & Marca Tática -->
+      <div class="globe-header-left">
+        <a id="back-to-dashboard" href="#" class="btn-hud-return" aria-label="Voltar ao painel">
+          <span class="btn-arrow">←</span>
+          <span>PAINEL</span>
+        </a>
+        <div class="globe-telemetry-brand">
+          <span class="globe-sat-badge">🛰</span>
+          <div>
+            <h1 id="globe-title" class="globe-tactical-title" tabindex="-1">TELEMETRIA GLOBAL</h1>
+            <div class="globe-tactical-sub">SATÉLITE MK-V · FONTES PÚBLICAS</div>
+            <output id="globe-coordinates" aria-label="Centro do mapa">LAT — / LON —</output>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloco Central: Cápsulas Táticas das Camadas -->
+      <div class="globe-header-center">
+        <!-- Aéreo -->
+        <div class="hud-pill pill-flights">
+          <label class="hud-pill-toggle" title="Aeronaves em até 463 km do centro do mapa">
+            <input id="flights-toggle" type="checkbox" disabled>
+            <span class="hud-switch"></span>
+            <span class="hud-pill-label"><span class="pill-icon">✈</span> TRÁFEGO AÉREO</span>
+          </label>
+          <div class="hud-pill-actions">
+            <button id="flights-southeast" class="btn-pill-sub" type="button" disabled title="Focar voos no Sudeste">Sudeste</button>
+            <button id="flights-refresh" class="btn-pill-icon" type="button" disabled title="Atualizar voos da região">↻</button>
+          </div>
+          <span id="flights-status" class="hud-pill-status" role="status"></span>
+        </div>
+
+        <!-- Navios -->
+        <div class="hud-pill pill-vessels">
+          <label class="hud-pill-toggle" title="Consulta sinais em até 2 graus de cada lado do centro">
+            <input id="vessels-toggle" type="checkbox" disabled>
+            <span class="hud-switch"></span>
+            <span class="hud-pill-label"><span class="pill-icon">🚢</span> NAVIOS</span>
+          </label>
+          <div class="hud-pill-actions">
+            <button id="vessels-santos" class="btn-pill-sub" type="button" disabled title="Porto de Santos">Santos</button>
+            <button id="vessels-refresh" class="btn-pill-icon" type="button" disabled title="Atualizar navios da região">↻</button>
+          </div>
+          <span id="vessels-status" class="hud-pill-status" role="status"></span>
+        </div>
+
+        <!-- Sísmico -->
+        <div class="hud-pill pill-earthquakes">
+          <label class="hud-pill-toggle" title="Monitor de abalos sísmicos nas últimas 24h">
+            <input id="earthquakes-toggle" type="checkbox" disabled>
+            <span class="hud-switch"></span>
+            <span class="hud-pill-label"><span class="pill-icon">🌋</span> SÍSMICO · 24H</span>
+          </label>
+          <div class="hud-pill-actions">
+            <button id="earthquakes-refresh" class="btn-pill-icon" type="button" disabled title="Atualizar terremotos">↻</button>
+          </div>
+          <span id="earthquakes-status" class="hud-pill-status" role="status"></span>
+        </div>
+
+        <!-- Câmeras -->
+        <div class="hud-pill pill-webcams">
+          <label class="hud-pill-toggle" title="Prévias de câmeras públicas fornecidas pela Windy">
+            <input id="webcams-toggle" type="checkbox" disabled>
+            <span class="hud-switch"></span>
+            <span class="hud-pill-label"><span class="pill-icon">📷</span> CÂMERAS</span>
+          </label>
+          <div class="hud-pill-actions">
+            <button id="webcams-sao-paulo" class="btn-pill-sub" type="button" disabled title="Consultar câmeras próximas de São Paulo">São Paulo</button>
+            <button id="webcams-refresh" class="btn-pill-icon" type="button" disabled title="Atualizar câmeras">↻</button>
+          </div>
+          <span id="webcams-status" class="hud-pill-status" role="status"></span>
+        </div>
+      </div>
+
+      <!-- Bloco Direito: GPS & Câmera -->
+      <div class="globe-header-right">
+        <button id="map-location-button" class="btn-hud-tactical btn-gps" type="button" disabled title="Localizar meu dispositivo">
+          <span class="tactical-glyph">⌖</span> MINHA POSIÇÃO
+        </button>
+        <span id="map-location-status" class="hud-pill-status" role="status"></span>
+        <button id="reset-globe" class="btn-hud-tactical btn-reset" type="button" disabled title="Recentralizar globo">
+          <span class="tactical-glyph">⟲</span> RECENTRALIZAR
+        </button>
+      </div>
+    </header>
+    <div class="globe-content">
+      <div id="globe-map" aria-label="Globo terrestre interativo"></div>
+      <div id="flight-preview" role="tooltip" hidden></div>
+      <aside id="flight-details" aria-label="Detalhes do voo selecionado" hidden>
+        <button id="flight-details-close" type="button">Fechar detalhes</button>
+        <div id="flight-details-content" aria-live="polite"></div>
+      </aside>
+      <p id="globe-status" role="status" hidden></p>
+    </div>
+  </main>
   <dialog id="notes-sync-conflict" class="notes-sync-dialog">
     <h2>Notas diferentes neste dispositivo e no servidor</h2>
     <p>Escolha a versão que deseja usar. Uma cópia da outra versão será preservada neste dispositivo.</p>
@@ -407,5 +509,12 @@
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
+  <script src="js/flights.js"></script>
+  <script src="js/earthquakes.js"></script>
+  <script src="js/vessels.js"></script>
+  <script src="js/map-location.js"></script>
+  <script src="js/webcams.js"></script>
+  <script src="js/globe.js"></script>
+  <script src="js/interface-hud.js"></script>
 </body>
 </html>
