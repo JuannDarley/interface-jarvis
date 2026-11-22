@@ -35,35 +35,70 @@ fi
 
 FACE_API_PID=""
 BROWSER_MONITOR_PID=""
+BACKEND_PID=""
+CLEANED_UP=false
+
+# Signal only the process trees belonging to this launch, never all Python processes.
+stop_tree() {
+  local target="$1" child
+  [ -n "$target" ] || return 0
+  for child in $(pgrep -P "$target" 2>/dev/null || true); do
+    stop_tree "$child"
+  done
+  kill -TERM "$target" 2>/dev/null || true
+}
+cleanup() {
+  [ "$CLEANED_UP" = false ] || return 0
+  CLEANED_UP=true
+  trap '' INT TERM
+  echo ""
+  echo "Encerrando Jarvis e liberando a câmera..."
+  for target in "$BROWSER_MONITOR_PID" "$BACKEND_PID" "$FACE_API_PID"; do
+    stop_tree "$target"
+  done
+  # Uvicorn receives SIGTERM, runs its lifespan cleanup and calls camera.release().
+  for i in {1..50}; do
+    [ -n "$FACE_API_PID" ] && kill -0 "$FACE_API_PID" 2>/dev/null || break
+    sleep 0.1
+  done
+  if [ -n "$FACE_API_PID" ]; then
+    kill -KILL "$FACE_API_PID" 2>/dev/null || true
+    wait "$FACE_API_PID" 2>/dev/null || true
+  fi
+  echo "✓ Reconhecimento facial encerrado; câmera liberada."
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 if curl -fsS --max-time 2 http://127.0.0.1:8000/health >/dev/null 2>&1; then
-  echo "✓ Reconhecimento facial já está ativo em http://127.0.0.1:8000"
+  existing_pid=$(lsof -t -nP -iTCP:8000 -sTCP:LISTEN | head -1)
+  if ps -p "$existing_pid" -o command= | grep -Fq 'uvicorn face_unlock.api:app'; then
+    FACE_API_PID="$existing_pid"
+    echo "✓ API facial existente vinculada a esta sessão; será encerrada ao sair."
+  else
+    echo "❌ A porta 8000 está ocupada por outro serviço."
+    exit 1
+  fi
 else
   echo "→ Iniciando API de Reconhecimento Facial (Python na porta 8000)..."
-  (cd "$FACE_API_DIR" && "$FACE_PYTHON" -m uvicorn face_unlock.api:app --host 127.0.0.1 --port 8000 >/dev/null 2>&1) &
+  (cd "$FACE_API_DIR" && exec "$FACE_PYTHON" -m uvicorn face_unlock.api:app --host 127.0.0.1 --port 8000 >/dev/null 2>&1) &
   FACE_API_PID=$!
-
-  # Aguarda a API facial ficar pronta
+  FACE_READY=false
   for i in {1..30}; do
     if curl -fsS --max-time 1 http://127.0.0.1:8000/health >/dev/null 2>&1; then
+      FACE_READY=true
       echo "✓ Reconhecimento facial pronto!"
       break
     fi
+    kill -0 "$FACE_API_PID" 2>/dev/null || break
     sleep 0.5
   done
+  if [ "$FACE_READY" != true ]; then
+    echo "❌ A API facial não iniciou. Encerrando os serviços desta sessão."
+    exit 1
+  fi
 fi
-
-cleanup() {
-  echo ""
-  echo "Encerrando serviços..."
-  if [ -n "$BROWSER_MONITOR_PID" ]; then
-    kill "$BROWSER_MONITOR_PID" 2>/dev/null || true
-  fi
-  if [ -n "$FACE_API_PID" ]; then
-    kill "$FACE_API_PID" 2>/dev/null || true
-    echo "✓ Servidor de reconhecimento facial encerrado."
-  fi
-}
-trap cleanup EXIT INT TERM
 
 export JARVIS_FRONTEND_PATH="$INTERFACE_DIR"
 export JARVIS_FRONTEND_ENABLED=true
@@ -89,4 +124,6 @@ export FACE_UNLOCK_API_URL="http://127.0.0.1:8000"
 BROWSER_MONITOR_PID=$!
 
 echo "→ Iniciando Backend JARVIS (Spring Boot na porta 8080)..."
-zsh -ic 'cd "$1" && ./mvnw spring-boot:run' jarvis "$PROJECT_DIR"
+zsh -ic 'cd "$1" && exec ./mvnw spring-boot:run' jarvis "$PROJECT_DIR" &
+BACKEND_PID=$!
+wait "$BACKEND_PID"

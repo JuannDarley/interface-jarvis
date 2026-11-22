@@ -181,3 +181,7 @@ body.globe-active #screen-activation {
 #flight-preview .flight-aircraft-identity strong { font-size: 1.4rem; }
 #flight-preview p { margin: 6px 0; font-size: 0.8rem; }
 #flight-preview small { color: #bca4d2; font-size: 0.7rem; }
+
+#webcams-status { font-size: 0.8rem; color: #c6b5df; }
+.webcam-details img { display: block; max-width: 100%; height: auto; margin: 10px 0; border-radius: 6px; }
+.webcam-details { max-height: 65dvh; overflow: auto; }

@@ -46,13 +46,13 @@
       context.beginPath();
       points.forEach(([x,y], index) => index ? context.lineTo(x,y) : context.moveTo(x,y));
       context.closePath();
-      context.fillStyle = "#dbb9ff";
-      context.strokeStyle = "#342241";
+      context.fillStyle = "#7af3ff";
+      context.strokeStyle = "#163b43";
       context.lineWidth = 2;
       context.fill();
       context.stroke();
       if (name === "helicopter") {
-        context.strokeStyle = "#dbb9ff";
+        context.strokeStyle = "#7af3ff";
         context.lineWidth = 3;
         context.beginPath();
         context.moveTo(9,13); context.lineTo(55,35);
@@ -466,7 +466,7 @@
     map.addLayer({id:"flight-route",type:"line",source:"flight-route",
       paint:{"line-color":"#a48abd","line-width":1.5,"line-dasharray":[3,3]}});
     map.addLayer({id:"flight-track",type:"line",source:"flight-track",
-      paint:{"line-color":"#e2b7ff","line-width":2.5}});
+      paint:{"line-color":"#60e9f5","line-width":2.5}});
     map.addLayer({id:"flight-selection",type:"circle",source:"flights",
       filter:["==",["get","id"],""],
       paint:{"circle-radius":18,"circle-color":"#bb81ed","circle-opacity":0.25}});

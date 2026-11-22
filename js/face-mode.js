@@ -91,6 +91,9 @@
 
       // 4. Atalhos de Teclado (F para alternar, Esc para fechar)
       window.addEventListener("keydown", (e) => {
+        if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey ||
+            location.hash === "#mapa" || document.querySelector('dialog[open], .modal-overlay.open') ||
+            e.target.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
         if (activeTag === "input" || activeTag === "textarea") {
           return; // Ignora quando o foco estiver em campos de texto

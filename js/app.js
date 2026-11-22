@@ -96,7 +96,14 @@
         speechUserText.classList.toggle("empty", !userMsg);
       }
       if (jarvisMsg !== null && jarvisMsg !== undefined) {
+        speechJarvisText.getAnimations?.().forEach(animation => animation.cancel());
         speechJarvisText.textContent = jarvisMsg;
+        if (!document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          speechJarvisText.animate?.([
+            { opacity: .65, clipPath: 'inset(0 85% 0 0)' },
+            { opacity: 1, clipPath: 'inset(0 0 0 0)' }
+          ], { duration: 180, easing: 'ease-out' });
+        }
       }
     }
 

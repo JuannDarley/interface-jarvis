@@ -8,6 +8,8 @@
   const mapLibreUrl = "https://unpkg.com/maplibre-gl@5.6.2/dist";
   const initialView = { center: [-51, -16], zoom: 1.25, pitch: 0, bearing: 0 };
   let map;
+  let savedView = initialView;
+  let savedLayers;
 
   function loadAsset(element, url) {
     return new Promise((resolve, reject) => {
@@ -49,10 +51,10 @@
       "label_country_3", "label_country_2", "label_country_1",
     ]);
     const colors = {
-      background: { "background-color": "#221a30" },
-      fill: { "fill-color": "#0a080f" },
-      line: { "line-color": "#645078" },
-      symbol: { "text-color": "#d0bce9", "text-halo-color": "#14101c" },
+      background: { "background-color": "#10181d" },
+      fill: { "fill-color": "#03070b" },
+      line: { "line-color": "#697987" },
+      symbol: { "text-color": "#a5b8c4", "text-halo-color": "#070c11" },
     };
 
     const layers = base.layers.filter(layer => visibleLayers.has(layer.id));
@@ -76,10 +78,16 @@
     const run = ++navigation;
     const showMap = location.hash === "#mapa";
     const wasOpen = !view.hidden;
+    if (showMap) window.faceModeToggle?.(false);
+    openButton.setAttribute("aria-expanded", String(showMap));
     document.body.classList.toggle("globe-active", showMap);
     view.hidden = !showMap;
 
     if (!showMap) {
+      if (map) {
+        savedView = { center: map.getCenter(), zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch() };
+        savedLayers = [...view.querySelectorAll('.hud-pill input')].map(input => [input.id, input.checked]);
+      }
       document.dispatchEvent(new Event("jarvis:map-close"));
       map?.remove();
       map = undefined;
@@ -100,7 +108,7 @@
       const globe = new engine.Map({
         container,
         style,
-        ...initialView,
+        ...savedView,
         minZoom: 0.75,
         maxZoom: 18,
         maxPitch: 0,
@@ -111,12 +119,27 @@
         },
       });
       map = globe;
+      const coordinates = document.getElementById("globe-coordinates");
+      function updateCoordinates() {
+        const center = globe.getCenter();
+        const longitude = ((center.lng + 180) % 360 + 360) % 360 - 180;
+        coordinates.textContent = `LAT ${center.lat.toFixed(4)} / LON ${longitude.toFixed(4)}`;
+      }
+      globe.on("move", updateCoordinates);
+      updateCoordinates();
       globe.addControl(new engine.NavigationControl({ showCompass: false }), "top-right");
       globe.once("load", () => {
         if (map !== globe) return;
         status.hidden = true;
         resetButton.disabled = false;
         document.dispatchEvent(new CustomEvent("jarvis:map-ready", { detail: globe }));
+        for (const [id, checked] of savedLayers || []) {
+          const input = document.getElementById(id);
+          if (input.checked !== checked) {
+            input.checked = checked;
+            input.dispatchEvent(new Event('change'));
+          }
+        }
       });
       globe.on("error", () => {
         if (map === globe && resetButton.disabled) {
@@ -132,7 +155,7 @@
   }
 
   resetButton.addEventListener("click", () => map?.jumpTo(initialView));
-  view.addEventListener("keydown", event => event.stopPropagation());
+
   window.addEventListener("hashchange", showCurrentView);
   showCurrentView();
 })();

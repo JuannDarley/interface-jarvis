@@ -1,0 +1,73 @@
+/* Production HUD refinements. Existing IDs, theme tokens and layer integrations are retained. */
+#app-container { gap: 20px; padding-top: 20px; }
+.hud-topbar { gap: 14px; padding: 14px 18px; }
+.hud-topbar .jarvis-identity { display:flex; gap:12px; height:auto; position:relative; isolation:auto; }
+.hud-topbar .jarvis-atom { position:relative; flex:0 0 44px; width:44px; height:44px; }
+.hud-topbar .jarvis-atom-electron::after { width:5px; height:5px; top:-2px; left:calc(50% - 2px); }
+.hud-title { font-family:var(--font-display); font-size:15px; letter-spacing:.12em; }
+.hud-subtitle { font-size:10px; color:var(--txt2); }
+.hud-topbar .weather-strip { flex:1 1 300px; min-width:0; margin:0; padding:8px 12px; border-radius:10px; gap:10px; }
+.hud-topbar .weather-strip-heading { font-size:9px; letter-spacing:.06em; }
+.hud-topbar #weather-temperature { font-size:22px; }
+.hud-topbar .weather-strip-reading { gap:10px; }
+.hud-topbar .weather-strip-details { font-size:11px; }
+.hud-topbar .weather-strip-action { max-width:205px; }
+.hud-topbar .weather-strip-action small { font-size:9px; line-height:1.3; color:var(--txt2); }
+.hud-topbar .weather-strip-action button { font-size:9px; padding:7px; }
+.hud-topbar .context-consent { max-width:none; flex-basis:100%; font-size:10px; }
+#open-globe { margin-inline-start:0; display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:11px 15px; border-color:#53c5e7; background:linear-gradient(120deg,#092735,#291239); font:12px var(--font-mono); letter-spacing:.06em; color:#d5f9ff; white-space:nowrap; }
+#open-globe:hover, #open-globe[aria-expanded="true"] { box-shadow:0 0 18px #22d3ee30; border-color:#a7f3ff; }
+.reactor-section { padding-block:22px; gap:18px; }
+.orb-wrapper { margin-block:14px; }
+.dialogue-box { margin-top:8px; }
+.dialogue-text, .brain-subtitle, .legend-verified { text-shadow:none; }
+.controls-bar:focus-within { border-color:var(--accent-cyan); box-shadow:0 0 0 2px #22d3ee40,0 0 20px #a855f740; }
+:where(button,a,input,select,textarea,summary):focus-visible { outline:2px solid var(--accent-cyan); outline-offset:4px; }
+#btn-add-note { order:-1; background:linear-gradient(110deg,#0e7490,#7e22ce); border-color:#67e8f9; color:white; }
+#notes-sync-button { background:#1c102d; border-color:#a879d4; color:#eedcff; }
+#btn-reset-brain { background:transparent; border-color:#64748b66; color:#b8c4d5; box-shadow:none; }
+.keyboard-help { max-width:1200px; margin:0 auto 20px; padding:0 20px; color:#bac7d8; font:11px var(--font-mono); }
+.keyboard-help summary { cursor:pointer; width:fit-content; }
+.keyboard-help p { padding-top:8px; }
+body.globe-active .keyboard-help { display:none; }
+.globe-header { display:grid; grid-template-columns:minmax(230px,.9fr) minmax(0,2fr) minmax(155px,.5fr); gap:12px; padding:14px 18px; background:linear-gradient(110deg,#11131e,#100c19); border:1px solid #785197; border-radius:14px; margin:12px; box-shadow:0 0 24px #a855f718; }
+.globe-header-left { display:flex; align-items:center; gap:12px; min-width:0; }
+#back-to-dashboard { font:11px var(--font-mono); padding:12px 9px; white-space:nowrap; }
+.globe-telemetry-brand { display:flex; align-items:center; gap:8px; min-width:0; }
+.globe-sat-badge { color:var(--accent-cyan); }
+.globe-header .globe-tactical-title { font:600 12px var(--font-display); letter-spacing:.04em; }
+.globe-tactical-sub { color:#b0bccf; font:9px var(--font-mono); margin-top:4px; }
+#globe-coordinates { display:block; font:11px var(--font-mono); color:#80e8fc; margin-top:6px; }
+.globe-header-center { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:8px; min-width:0; }
+.hud-pill { --layer-tone:#67e8f9; display:flex; flex-wrap:wrap; align-items:center; gap:6px; border:1px solid #435369; border-radius:18px; padding:8px 10px; background:#12151f; max-width:100%; min-width:0; }
+.pill-vessels { --layer-tone:#bda0ed; }.pill-earthquakes { --layer-tone:#f5b5d4; }.pill-webcams { --layer-tone:#c6aceb; }
+.hud-pill-toggle { display:flex; align-items:center; gap:7px; cursor:pointer; font:10px var(--font-mono); }
+.hud-pill-toggle input { position:absolute; opacity:0; width:1px; height:1px; }
+.hud-pill-toggle:has(input:focus-visible) { outline:2px solid #67e8f9; outline-offset:5px; border-radius:5px; }
+.hud-switch { width:7px; height:7px; border-radius:50%; background:#637083; flex-shrink:0; }
+.hud-pill:has(input:checked) { border-color:var(--layer-tone); }
+.hud-pill:has(input:checked) .hud-switch { background:var(--layer-tone); box-shadow:0 0 8px var(--layer-tone); }
+.hud-pill:has(input:disabled) { opacity:.6; }
+.hud-pill[data-state="loading"] .hud-switch { animation:hud-led 1s ease-in-out infinite; }
+.hud-pill[data-state="error"] { border-color:#fda4af; }
+.hud-pill[data-state="error"] .hud-switch { background:#fda4af; box-shadow:none; }
+.hud-pill-actions { display:flex; gap:4px; }
+.globe-header .btn-pill-sub,.globe-header .btn-pill-icon { padding:3px 6px; border:0; background:#282036; font:10px var(--font-mono); border-radius:12px; }
+.globe-header .hud-pill-status { flex-basis:100%; max-width:240px; font:10px/1.4 var(--font-mono); color:#d0c3df; overflow-wrap:anywhere; }
+.hud-pill-status:empty { display:none; }
+.globe-header-right { display:grid; gap:6px; }
+.globe-header .btn-hud-tactical { font:10px var(--font-mono); padding:9px 8px; }
+.globe-header button:hover:not(:disabled), #back-to-dashboard:hover { border-color:#83e5f5; color:#e0fbff; }
+.globe-content { min-height:220px; }
+@keyframes hud-led { 50% { opacity:.3; } }
+@media(min-width:1100px) { .reactor-section { padding:24px 36px; } }
+@media(max-width:1150px) { .globe-header { grid-template-columns:1fr auto; }.globe-header-center { grid-column:1/-1; grid-row:2; }.globe-header-right { max-width:210px; }.hud-topbar .weather-strip { order:2; flex-basis:100%; }.hud-topbar .context-consent { order:3; } #open-globe { margin-inline-start:auto; } }
+@media(max-width:600px) { #app-container { padding:12px 12px 30px; gap:14px; }.hud-topbar { padding:12px; gap:10px; }.hud-subtitle { max-width:160px; font-size:8px; }.hud-title { font-size:12px; }.hud-topbar .jarvis-atom { flex-basis:34px; width:34px; height:34px; } #open-globe { font-size:10px; padding:9px; }.hud-topbar .weather-strip { flex-wrap:wrap; }.hud-topbar .weather-strip-action { max-width:none; }.globe-header { margin:6px; padding:10px; gap:10px; max-height:52dvh; overflow-y:auto; }.globe-header-left { flex-wrap:wrap; gap:7px; }.globe-sat-badge { display:none; }.globe-header-center { justify-content:flex-start; }.hud-pill { flex:1 1 145px; }.globe-header .hud-pill-status { max-width:none; }.globe-header .globe-tactical-title { font-size:10px; }.globe-tactical-sub { font-size:8px; } #globe-coordinates { font-size:10px; }.globe-header-right { max-width:140px; }.brain-actions { flex-wrap:wrap; }.reactor-section { padding:18px 14px; } }
+body.globe-active .jarvis-atom-electron,body.globe-active #app-container * { animation-play-state:paused; }
+@media(prefers-reduced-motion:reduce) { .hud-pill[data-state="loading"] .hud-switch { animation:none; }.dialogue-text { animation:none; } }
+/* Keep the existing cockpit action on the main row, ahead of the consent line. */
+.hud-topbar .context-consent { order:10; }
+#btn-face-toggle { margin:0; padding:9px 12px; font-size:11px; }
+.reactor-section .orb-wrapper { width:180px; height:180px; }
+.reactor-section .controls-bar { margin-top:0; }
+@media(max-width:600px) { #btn-face-toggle { order:4; }.hud-topbar .context-consent { order:5; }.reactor-section .orb-wrapper { width:150px; height:150px; } }
