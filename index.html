@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="css/interface-hud.css">
   <link rel="stylesheet" href="css/reference-hud.css">
   <link rel="stylesheet" href="css/account.css">
+  <link rel="stylesheet" href="css/planning.css">
 
 </head>
 <body>
@@ -85,6 +86,7 @@
         <span class="hud-map-icon">🛰</span>
         <span>MAPA GLOBAL</span>
       </a>
+      <button id="open-planning" type="button" aria-haspopup="dialog">TAREFAS &amp; METAS</button>
       <button id="open-account" type="button" aria-haspopup="dialog">MEU PERFIL</button>
       <label class="context-consent" title="As notas completas do Second Brain serão enviadas à Groq junto com a conversa.">
         <input type="checkbox" id="context-consent">
@@ -518,12 +520,34 @@
     <section><h3>Conversas salvas</h3><p>Últimas 50 conversas. O restante permanece no banco.</p><button id="account-history-refresh" type="button">ATUALIZAR HISTÓRICO</button><div id="account-history" class="account-history"></div></section>
   </dialog>
 
+  <dialog id="planning-dialog" class="planning-dialog" aria-labelledby="planning-title">
+    <header class="planning-heading"><div><p class="planning-eyebrow">SECOND BRAIN / ORGANIZAÇÃO</p><h2 id="planning-title">Tarefas & metas</h2><p>Transforme seus objetivos no próximo passo.</p></div><button id="planning-close" type="button" aria-label="Fechar tarefas e metas">✕</button></header>
+    <div id="planning-summary" class="planning-summary" aria-label="Resumo das tarefas"></div>
+    <div class="planning-sync"><p id="planning-status" role="status" aria-live="polite">Abra o painel para carregar suas tarefas.</p><div><button id="planning-refresh" type="button">ATUALIZAR</button><button id="planning-save" type="button" disabled>SALVAR ALTERAÇÕES</button></div></div>
+    <section id="planning-conflict" class="planning-conflict" hidden aria-label="Alterações em outro dispositivo"><h3>Existe outra versão no servidor</h3><p>Seu rascunho continua aqui. Confira a lista abaixo antes de escolher. Ao usar a versão do servidor, guardaremos uma cópia do rascunho neste dispositivo.</p><div id="planning-remote"></div><button id="planning-use-server" type="button">USAR VERSÃO DO SERVIDOR</button><button id="planning-keep-draft" type="button">CONTINUAR NO RASCUNHO</button></section>
+    <div class="planning-workspace">
+      <aside class="planning-goals"><div class="planning-section-heading"><h3>Suas metas</h3><button id="planning-new-goal" type="button" disabled>+ META</button></div><button id="planning-all-goals" type="button" aria-pressed="true">Todas as tarefas</button><div id="planning-goals-list"></div></aside>
+      <section class="planning-tasks"><div class="planning-section-heading"><h3 id="planning-list-title">Próximos passos</h3><button id="planning-new-task" type="button" disabled>+ TAREFA</button></div><div class="planning-filters"><label>Situação<select id="planning-filter"><option value="active">Em aberto</option><option value="all">Todas</option><option value="done">Concluídas</option></select></label><label>Prioridade<select id="planning-priority-filter"><option value="all">Todas</option><option value="high">Alta</option><option value="normal">Normal</option><option value="low">Baixa</option></select></label></div><p id="planning-empty" class="planning-empty">Suas tarefas aparecerão aqui.</p><div id="planning-tasks-list"></div></section>
+    </div>
+    <section id="planning-editor" class="planning-editor" hidden aria-labelledby="planning-editor-title">
+      <h3 id="planning-editor-title">Nova tarefa</h3><form id="planning-form">
+        <label>Título<input id="planning-item-title" required maxlength="160" autocomplete="off"></label>
+        <label>Descrição<textarea id="planning-item-description" maxlength="2000" rows="3"></textarea></label>
+        <div class="planning-form-grid"><label>Prazo opcional<input id="planning-item-date" type="date" min="0001-01-01" max="9999-12-31"></label><label id="planning-priority-label">Prioridade<select id="planning-item-priority"><option value="normal">Normal</option><option value="high">Alta</option><option value="low">Baixa</option></select></label><label id="planning-goal-label">Meta<select id="planning-item-goal"><option value="">Sem meta</option></select></label><label id="planning-state-label">Situação<select id="planning-item-state"><option value="todo">A fazer</option><option value="doing">Em andamento</option><option value="done">Concluída</option></select></label></div>
+        <div class="planning-editor-actions"><button type="submit">GUARDAR NO RASCUNHO</button><button id="planning-cancel-edit" type="button">CANCELAR</button></div>
+      </form>
+    </section>
+    <section id="planning-delete-confirm" class="planning-conflict" hidden><p id="planning-delete-message"></p><button id="planning-delete-yes" type="button">CONFIRMAR EXCLUSÃO</button><button id="planning-delete-no" type="button">CANCELAR</button></section>
+    <footer class="planning-footnote">As alterações ficam em rascunho até você salvar. Prazos são datas; notificações entram na próxima etapa.</footer>
+  </dialog>
+
   <script src="js/state.js"></script>
   <script src="js/brain.js"></script>
   <script src="js/notes-sync.js"></script>
   <script src="js/voice.js"></script>
   <script src="js/weather.js"></script>
   <script src="js/account.js"></script>
+  <script src="js/planning.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
