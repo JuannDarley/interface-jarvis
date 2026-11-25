@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="css/reference-hud.css">
   <link rel="stylesheet" href="css/account.css">
   <link rel="stylesheet" href="css/planning.css">
+  <link rel="stylesheet" href="css/agenda.css">
 
 </head>
 <body>
@@ -86,6 +87,7 @@
         <span class="hud-map-icon">🛰</span>
         <span>MAPA GLOBAL</span>
       </a>
+      <button id="open-agenda" type="button" aria-haspopup="dialog">AGENDA</button>
       <button id="open-planning" type="button" aria-haspopup="dialog">TAREFAS &amp; METAS</button>
       <button id="open-account" type="button" aria-haspopup="dialog">MEU PERFIL</button>
       <label class="context-consent" title="As notas completas do Second Brain serão enviadas à Groq junto com a conversa.">
@@ -541,6 +543,21 @@
     <footer class="planning-footnote">As alterações ficam em rascunho até você salvar. Prazos são datas; notificações entram na próxima etapa.</footer>
   </dialog>
 
+  <section id="agenda-reminder-banner" class="agenda-reminder-banner" hidden aria-labelledby="agenda-reminder-title"><h2 id="agenda-reminder-title">Lembretes da sua agenda</h2><p id="agenda-reminder-status" role="status"></p><div id="agenda-reminder-items"></div></section>
+  <dialog id="agenda-dialog" class="agenda-dialog" aria-labelledby="agenda-title">
+    <header class="agenda-heading"><div><p class="agenda-eyebrow">SEU TEMPO / SEUS PRÓXIMOS PASSOS</p><h2 id="agenda-title">Agenda & lembretes</h2><p id="agenda-zone"></p></div><button id="agenda-close" type="button" aria-label="Fechar agenda">✕</button></header>
+    <div class="agenda-toolbar"><p id="agenda-status" role="status" aria-live="polite">Carregando sua agenda…</p><div><button id="agenda-refresh" type="button">ATUALIZAR</button><button id="agenda-new" type="button" disabled>+ COMPROMISSO</button></div></div>
+    <section id="agenda-inline-reminders" class="agenda-inline-reminders" hidden><h3>Lembretes pendentes</h3><div id="agenda-inline-reminder-items"></div></section>
+    <div class="agenda-workspace">
+      <aside class="agenda-calendar-panel"><div class="agenda-month-navigation"><button id="agenda-previous" type="button" aria-label="Mês anterior">‹</button><h3 id="agenda-month-title"></h3><button id="agenda-next" type="button" aria-label="Próximo mês">›</button></div><div class="agenda-weekdays" aria-hidden="true"><span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span></div><div id="agenda-calendar" class="agenda-calendar" aria-label="Dias do mês"></div><div class="agenda-calendar-actions"><button id="agenda-today" type="button">HOJE</button><button id="agenda-whole-month" type="button">VER MÊS</button></div><label class="agenda-show-cancelled"><input id="agenda-show-cancelled" type="checkbox"> Mostrar cancelados</label><section class="agenda-notification-settings"><h3>Lembretes</h3><p>Alertas no painel enquanto o JARVIS estiver aberto e conectado. Ao voltar, consulte pendências das últimas 24 horas.</p><button id="agenda-notifications" type="button" hidden>ATIVAR NOTIFICAÇÕES NO MAC</button><p id="agenda-notification-status">No celular, os alertas aparecem dentro do JARVIS. Não há envio em segundo plano com o app fechado.</p></section></aside>
+      <section class="agenda-events"><div class="agenda-list-heading"><h3 id="agenda-list-title">Compromissos do mês</h3><span id="agenda-count"></span></div><div id="agenda-events-list"></div><p id="agenda-empty" class="agenda-empty">Nenhum compromisso neste período.</p></section>
+    </div>
+    <section id="agenda-editor" class="agenda-editor" hidden aria-labelledby="agenda-editor-title"><h3 id="agenda-editor-title">Novo compromisso</h3><p id="agenda-draft-status" role="status"></p><form id="agenda-form"><label>Título<input id="agenda-item-title" required maxlength="160" autocomplete="off"></label><div class="agenda-form-grid"><label>Início<input id="agenda-start" type="datetime-local" required min="2000-01-01T00:00" max="2099-12-31T23:59"></label><label>Fim<input id="agenda-end" type="datetime-local" required min="2000-01-01T00:00" max="2099-12-31T23:59"></label><label>Lembrar<select id="agenda-reminder"><option value="">Sem lembrete</option><option value="0">No horário</option><option value="5">5 minutos antes</option><option value="10">10 minutos antes</option><option value="15">15 minutos antes</option><option value="30">30 minutos antes</option><option value="60">1 hora antes</option><option value="1440">1 dia antes</option></select></label></div><p id="agenda-duration"></p><label>Local ou link<input id="agenda-location" maxlength="240" autocomplete="off"></label><label>Descrição<textarea id="agenda-description" rows="3" maxlength="2000"></textarea></label><div class="agenda-editor-actions"><button type="submit" id="agenda-submit">SALVAR COMPROMISSO</button><button id="agenda-close-editor" type="button">FECHAR RASCUNHO</button><button id="agenda-discard-draft" type="button">DESCARTAR RASCUNHO</button></div></form></section>
+    <section id="agenda-conflict" class="agenda-warning" hidden><h3>O compromisso mudou em outro dispositivo</h3><p>Seu rascunho foi mantido. Confira a versão salva abaixo antes de escolher.</p><div id="agenda-conflict-preview"></div><button id="agenda-use-remote" type="button">CARREGAR VERSÃO SALVA</button><button id="agenda-keep-draft" type="button">MANTER RASCUNHO</button></section>
+    <section id="agenda-confirm" class="agenda-warning" hidden><p id="agenda-confirm-message"></p><button id="agenda-confirm-yes" type="button">CONFIRMAR</button><button id="agenda-confirm-no" type="button">VOLTAR</button></section>
+    <footer class="agenda-footnote">Compromissos salvos ficam disponíveis no Mac e no celular. Os lembretes dependem do JARVIS aberto e da conexão com o Mac; não são alarmes garantidos com o app fechado.</footer>
+  </dialog>
+
   <script src="js/state.js"></script>
   <script src="js/brain.js"></script>
   <script src="js/notes-sync.js"></script>
@@ -548,6 +565,7 @@
   <script src="js/weather.js"></script>
   <script src="js/account.js"></script>
   <script src="js/planning.js"></script>
+  <script src="js/agenda.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
