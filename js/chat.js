@@ -33,15 +33,17 @@
           return;
         }
 
+        const memoryGeneration=window.JarvisMemory.version();
         const response = await fetch(`${window.JARVIS_API_BASE_URL}/api/chat`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...window.JarvisMemory?.headers()
           },
           body: JSON.stringify({
             message: commandText,
             history: sessionHistory.slice(0, -1).slice(-10),
-            context: contextConsent && contextConsent.checked ? buildBrainContext() : ""
+            ...(await window.JarvisMemory.payload())
           })
         });
 
@@ -58,6 +60,7 @@
           return;
         }
 
+        window.JarvisMemory?.used(data.sources);
         const rawReply = data.response || "";
 
         if (!rawReply) {
@@ -76,15 +79,11 @@
 
         if (saveMatch) {
           const [, area, title, body] = saveMatch;
-          if (typeof saveNoteFromAI === "function") {
-            saveNoteFromAI(area, title, body);
-          } else {
-            console.warn("Armazenamento de memórias ainda não está disponível no backend Java.");
-          }
+          window.JarvisMemory?.suggest(area, title, body);
           cleanReply = rawReply.replace(saveRegex, "").trim();
         }
 
-        sessionHistory.push({ role: "assistant", content: cleanReply });
+        if(memoryGeneration===window.JarvisMemory.version())sessionHistory.push({ role: "assistant", content: cleanReply });
         window.JarvisAccount?.recordTurn(commandText, cleanReply);
 
         setDialogueText(null, cleanReply);

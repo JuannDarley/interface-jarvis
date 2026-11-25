@@ -22,7 +22,9 @@
           btn.onclick = () => window.faceModeToggle();
 
           const keyArea = document.querySelector(".hud-key-area");
-          if (keyArea) {
+          const personalNav=document.querySelector(".personal-tools-nav");
+          if(personalNav){personalNav.appendChild(btn);}
+          else if (keyArea) {
             hudTopbar.insertBefore(btn, keyArea);
           } else {
             hudTopbar.appendChild(btn);

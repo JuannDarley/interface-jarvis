@@ -366,6 +366,7 @@
     hidePreview();
     deselect();
     selected = flight.properties.id;
+    document.dispatchEvent(new CustomEvent("jarvis:entity-selected",{detail:{kind:"flight",id:selected,name:flight.properties.callsign||flight.properties.registration||selected,coordinates:flight.geometry.coordinates,observedAt:flight.properties.positionTime}}));
     panel.hidden = false;
     map.setFilter("flight-selection", ["==", ["get","id"], selected]);
     const controller = new AbortController();
@@ -439,6 +440,7 @@
       }
       while (histories.size > 2000) histories.delete(histories.keys().next().value);
       map.getSource("flights").setData({type:"FeatureCollection",features:aircraft});
+      document.dispatchEvent(new CustomEvent("jarvis:entities-updated",{detail:{kind:"flight",features:aircraft}}));
       status.textContent = aircraft.length + " aeronaves · até 463 km do centro · ADSB.lol · " +
         new Date(lastObservedAt).toLocaleTimeString("pt-BR");
       if (selected && !aircraft.some(a => a.properties.id === selected)) deselect();

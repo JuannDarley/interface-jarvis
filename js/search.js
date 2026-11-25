@@ -1,0 +1,11 @@
+(()=>{
+ const $=id=>document.getElementById(id);let requestId=0;
+ const node=(tag,text)=>{const e=document.createElement(tag);e.textContent=text;return e;};
+ $('open-search').addEventListener('click',()=>{$('search-dialog').showModal();$('search-query').focus();});$('search-close').addEventListener('click',()=>{$('search-dialog').close();requestId++;});
+ $('search-form').addEventListener('submit',async event=>{
+  event.preventDefault();const run=++requestId;$('search-status').textContent='Consultando notas e conversas salvas…';$('search-conversation').hidden=true;
+  try{const r=await fetch(window.JARVIS_API_BASE_URL+'/api/search?'+new URLSearchParams({q:$('search-query').value,kind:$('search-kind').value}),{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(20000)});const result=await r.json();if(!r.ok)throw Error(result.error||'Busca indisponível. Seus dados não foram alterados.');if(run!==requestId)return;
+   $('search-results').replaceChildren(...result.map(hit=>{const card=document.createElement('article');card.append(node('small',hit.kind==='note'?'NOTA':'CONVERSA · '+new Date(hit.createdAt).toLocaleString('pt-BR')),node('h3',hit.title),node('p',hit.snippet));const open=node('button',hit.kind==='note'?'EDITAR NOTA':'LER CONVERSA');open.type='button';open.addEventListener('click',async()=>{try{if(hit.kind==='note'){await window.JarvisNotes?.synchronize();if(!currentNotes.some(n=>n.id===hit.id))throw Error('Nota não disponível neste dispositivo. Confira a sincronização.');$('search-dialog').close();window.openNoteEditor(hit.id);}else{const r=await fetch(window.JARVIS_API_BASE_URL+'/api/history/'+hit.id,{credentials:'same-origin',cache:'no-store'});if(!r.ok)throw Error('Conversa indisponível. Atualize a busca.');const t=await r.json();$('search-conversation-content').textContent='VOCÊ: '+t.message+'\n\nJARVIS: '+t.reply;$('search-conversation').hidden=false;}}catch(e){$('search-status').textContent=e.message;}});card.append(open);return card;}));$('search-status').textContent=result.length?`${result.length} resultado(s). Até 25 por origem; refine o termo para encontrar outros.`:'Nenhum resultado encontrado.';
+  }catch(e){if(run===requestId)$('search-status').textContent=e.message;}
+ });
+})();

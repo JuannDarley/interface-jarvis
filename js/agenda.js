@@ -8,7 +8,7 @@ window.JarvisAgenda=(()=>{
   const time=value=>new Date(value).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const full=value=>new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
   const today=()=>localDate(new Date());
-  let owner,device,events=[],month=new Date(new Date().getFullYear(),new Date().getMonth(),1),selected=null,busy=false,editing=null,remote=null,confirmation=null,polling=false,notices=[],nativeInFlight=new Set(),identityBlocked=false;
+  let owner,device,events=[],month=new Date(new Date().getFullYear(),new Date().getMonth(),1),selected=null,busy=false,editing=null,remote=null,confirmation=null,polling=false,pollAgain=false,notices=[],nativeInFlight=new Set(),identityBlocked=false;
   const message=text=>{$('agenda-status').textContent=text;};
   const draftKey=()=>`jarvis_agenda_draft:${owner}`;
   const prefKey=()=>`jarvis_agenda_notifications:${owner}`;
@@ -179,13 +179,13 @@ window.JarvisAgenda=(()=>{
     if(dialog.open&&notices.length)$('agenda-reminder-status').textContent=`${notices.length} lembrete(s) aguardando confirmação. Feche a agenda para vê-los no painel.`;
   }
   async function poll(){
-    if(polling||identityBlocked)return;polling=true;
+    if(identityBlocked)return;if(polling){pollAgain=true;return;}polling=true;
     try{
       await identity();const due=await request('/api/agenda/reminders?device='+device);if(identityBlocked)return;notices=due;renderNotices();
       $('agenda-reminder-status').textContent=due.length?'Marque como visto após conferir.':'Sem lembretes pendentes.';
       for(const event of due)void nativeNotice(event);
     }catch(e){if(e.status===401){clearPersonal();}else $('agenda-reminder-status').textContent='Sem conexão para atualizar lembretes. Os avisos exibidos podem ter sido alterados em outro dispositivo.';}
-    finally{polling=false;}
+    finally{polling=false;if(pollAgain){pollAgain=false;void poll();}}
   }
   $('agenda-zone').textContent='Horários no fuso '+zone;
   $('open-agenda').addEventListener('click',()=>{dialog.showModal();renderNotices();void load();});

@@ -1,0 +1,12 @@
+(()=>{
+ const $=id=>document.getElementById(id);let timer,busy=false;
+ async function load(){
+  try{const r=await fetch(window.JARVIS_API_BASE_URL+'/api/backups/status',{credentials:'same-origin',cache:'no-store'});if(!r.ok)throw Error('Não foi possível consultar o backup.');const s=await r.json();busy=s.busy;$('backup-status').textContent=s.lastError||(s.busy?'Operação em andamento…':s.enabled?'Serviço de backup disponível.':'Backup local ainda não configurado.');
+   const fields=[['Automático',s.autoEnabled?'Diário, configurado no Mac':'Ainda não ativado'],['Último backup',s.lastBackupAt?new Date(s.lastBackupAt).toLocaleString('pt-BR'):'Nenhum backup gerenciado'],['Restauração verificada',s.lastVerifiedAt?new Date(s.lastVerifiedAt).toLocaleString('pt-BR'):'Ainda não verificada'],['Cópia de recuperação',s.lastRecoveryContainer||'Nenhuma cópia isolada criada'],['Cópias locais',String(s.count??0)],['Tamanho do último',s.latestBytes?`${(s.latestBytes/1048576).toFixed(2)} MB`:'—']];$('backup-details').replaceChildren(...fields.flatMap(([label,value])=>{const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;return[dt,dd];}));
+   $('backup-run').disabled=!s.enabled||s.busy;$('backup-recover').disabled=!s.enabled||s.busy||!s.lastBackupAt;$('backup-verify').disabled=!s.enabled||s.busy||!s.lastBackupAt;
+   clearTimeout(timer);if(s.busy&&$('backup-dialog').open)timer=setTimeout(load,2000);
+  }catch(e){$('backup-status').textContent=e.message;}
+ }
+ async function run(action){if(busy)return;busy=true;$('backup-run').disabled=$('backup-verify').disabled=$('backup-recover').disabled=true;try{const r=await fetch(window.JARVIS_API_BASE_URL+'/api/backups/'+action,{method:'POST',credentials:'same-origin'});if(!r.ok){const b=await r.json();throw Error(b.error||'Operação não iniciada.');}await load();}catch(e){$('backup-status').textContent=e.message;busy=false;}}
+ $('open-backup').addEventListener('click',()=>{$('backup-dialog').showModal();void load();});$('backup-close').addEventListener('click',()=>{$('backup-dialog').close();clearTimeout(timer);});$('backup-dialog').addEventListener('close',()=>clearTimeout(timer));$('backup-run').addEventListener('click',()=>run('run'));$('backup-verify').addEventListener('click',()=>run('verify'));$('backup-recover').addEventListener('click',()=>run('recover'));$('backup-refresh').addEventListener('click',load);
+})();

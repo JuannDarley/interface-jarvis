@@ -18,6 +18,8 @@
   <link rel="stylesheet" href="css/account.css">
   <link rel="stylesheet" href="css/planning.css">
   <link rel="stylesheet" href="css/agenda.css">
+  <link rel="stylesheet" href="css/personal-tools.css">
+  <link rel="stylesheet" href="css/map-tools.css">
 
 </head>
 <body>
@@ -87,12 +89,17 @@
         <span class="hud-map-icon">🛰</span>
         <span>MAPA GLOBAL</span>
       </a>
+      <nav class="personal-tools-nav" aria-label="Ferramentas pessoais">
       <button id="open-agenda" type="button" aria-haspopup="dialog">AGENDA</button>
       <button id="open-planning" type="button" aria-haspopup="dialog">TAREFAS &amp; METAS</button>
       <button id="open-account" type="button" aria-haspopup="dialog">MEU PERFIL</button>
-      <label class="context-consent" title="As notas completas do Second Brain serão enviadas à Groq junto com a conversa.">
+      <button id="open-backup" type="button" aria-haspopup="dialog">BACKUP</button>
+      <button id="open-memory" type="button" aria-haspopup="dialog">MEMÓRIA</button>
+      <button id="open-search" type="button" aria-haspopup="dialog">BUSCAR</button>
+      </nav>
+      <label class="context-consent" title="Somente o perfil e as notas selecionadas serão enviados à Groq.">
         <input type="checkbox" id="context-consent">
-        <span>Permitir envio das notas à Groq</span>
+        <span>Usar memórias selecionadas na Groq</span>
       </label>
     </header>
 
@@ -132,6 +139,7 @@
             <span>◆</span> JARVIS
           </div>
           <div id="speech-jarvis-text" class="dialogue-text" aria-live="polite" aria-atomic="true">Sistemas prontos. Às suas ordens, senhor.</div>
+          <p id="context-sources" role="status"></p>
         </div>
       </div>
 
@@ -493,6 +501,8 @@
     </header>
     <div class="globe-content">
       <div id="globe-map" aria-label="Globo terrestre interativo"></div>
+      <details id="map-tools" class="map-tools"><summary>REGIÕES &amp; FAVORITOS</summary><p id="map-tools-status" role="status">Carregando…</p><label>Aeronaves<select id="map-aircraft-filter"><option value="all">Todos os tipos</option><option value="airliner">Comerciais</option><option value="heavy">Grande porte</option><option value="light">Leves</option><option value="helicopter">Helicópteros</option></select></label><label>Salvar região atual<input id="map-place-name" maxlength="120" placeholder="Nome da região" autocomplete="off"></label><button id="map-place-add" type="button">GUARDAR REGIÃO</button><div id="map-place-list"></div><hr><p id="map-selected-name">Clique em um avião ou navio.</p><div class="map-tools-actions"><button id="map-follow" type="button" disabled>ACOMPANHAR</button><button id="map-favorite-add" type="button" disabled>FAVORITAR</button></div><div id="map-favorite-list"></div><hr><div class="map-tools-actions"><button id="map-preferences-save" type="button" disabled>SALVAR ALTERAÇÕES</button><button id="map-preferences-reload" type="button">RECARREGAR</button></div><section id="map-preferences-conflict" hidden><p>Outra versão foi salva. O rascunho local foi mantido. Confira as regiões e favoritos remotos antes de escolher.</p><p id="map-preferences-remote"></p><button id="map-preferences-use-remote" type="button">USAR VERSÃO DO SERVIDOR</button></section><small>Favoritos guardam a última posição conhecida. Acompanhar usa novas consultas da camada; pode parar se a fonte não retornar o alvo. Salve para sincronizar entre dispositivos.</small></details>
+
       <div id="flight-preview" role="tooltip" hidden></div>
       <aside id="flight-details" aria-label="Detalhes do voo selecionado" hidden>
         <button id="flight-details-close" type="button">Fechar detalhes</button>
@@ -558,6 +568,11 @@
     <footer class="agenda-footnote">Compromissos salvos ficam disponíveis no Mac e no celular. Os lembretes dependem do JARVIS aberto e da conexão com o Mac; não são alarmes garantidos com o app fechado.</footer>
   </dialog>
 
+  <dialog id="memory-dialog" class="personal-dialog" aria-labelledby="memory-title"><header><div><small>CONTEXTO SOB SEU CONTROLE</small><h2 id="memory-title">Memória nas conversas</h2></div><button id="memory-close" type="button" aria-label="Fechar memória">✕</button></header><p>Selecione o que pode ser enviado à Groq junto com sua próxima mensagem. Usamos somente a versão salva no servidor. O envio fica desativado ao reabrir o aplicativo.</p><p id="memory-status" role="status"></p><label><input id="memory-profile" type="checkbox"> Nome e bio do perfil</label><div id="memory-notes"></div><div class="personal-actions"><button id="memory-preview" type="button">CONFERIR CONTEÚDO</button><button id="memory-apply" type="button">AUTORIZAR SELEÇÃO</button><button id="memory-off" type="button">DESATIVAR ENVIO</button></div><pre id="memory-content" hidden></pre><p>Para corrigir ou excluir informações, edite o perfil ou a nota original. Sugestões da IA só viram notas após sua revisão.</p><button id="memory-edit-profile" type="button">EDITAR PERFIL</button><section id="memory-suggestion" hidden><h3>Memória sugerida pelo JARVIS</h3><p id="memory-suggestion-text"></p><button id="memory-review-suggestion" type="button">REVISAR COMO NOVA NOTA</button><button id="memory-dismiss-suggestion" type="button">DESCARTAR SUGESTÃO</button></section></dialog>
+  <dialog id="search-dialog" class="personal-dialog" aria-labelledby="search-title"><header><div><small>CONSULTA PRIVADA / SEM ENVIO À IA</small><h2 id="search-title">Buscar nas suas informações</h2></div><button id="search-close" type="button" aria-label="Fechar busca">✕</button></header><form id="search-form"><label>Palavra ou trecho<input id="search-query" required maxlength="120" type="search" placeholder="Ex.: estudos, projeto, viagem" autocomplete="off"></label><label>Origem<select id="search-kind"><option value="all">Notas e conversas</option><option value="notes">Notas</option><option value="history">Conversas</option></select></label><button type="submit">BUSCAR</button></form><p id="search-status" role="status">Busca por palavras, sem diferenciar maiúsculas ou acentos comuns. Até 25 resultados por origem; refine o termo para encontrar outros.</p><div id="search-results"></div><section id="search-conversation" hidden><h3>Conversa salva</h3><pre id="search-conversation-content"></pre></section></dialog>
+
+  <dialog id="backup-dialog" class="personal-dialog" aria-labelledby="backup-title"><header><div><small>PROTEÇÃO DOS SEUS DADOS</small><h2 id="backup-title">Backup & restauração</h2></div><button id="backup-close" type="button" aria-label="Fechar backup">✕</button></header><p>Backup completo do banco local: notas, perfil, imagens, histórico, tarefas e agenda. A verificação restaura uma cópia isolada e mantém o banco em uso intacto.</p><p id="backup-status" role="status">Carregando…</p><dl id="backup-details"></dl><div class="personal-actions"><button id="backup-run" type="button">FAZER BACKUP AGORA</button><button id="backup-verify" type="button">TESTAR RESTAURAÇÃO</button><button id="backup-recover" type="button">CRIAR CÓPIA DE RECUPERAÇÃO</button><button id="backup-refresh" type="button">ATUALIZAR STATUS</button></div><p>O backup automático é diário, enquanto o Mac e o Docker estiverem disponíveis. Se houver falha, ela aparecerá aqui. Nenhuma cópia antiga é apagada automaticamente.</p><p>A recuperação definitiva é feita primeiro em um banco separado. O banco atual nunca é substituído por este painel. Os arquivos ficam no Mac; uma cópia externa continua necessária para proteger contra perda do computador.</p></dialog>
+
   <script src="js/state.js"></script>
   <script src="js/brain.js"></script>
   <script src="js/notes-sync.js"></script>
@@ -566,6 +581,9 @@
   <script src="js/account.js"></script>
   <script src="js/planning.js"></script>
   <script src="js/agenda.js"></script>
+  <script src="js/memory.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/backup.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>
@@ -574,6 +592,7 @@
   <script src="js/vessels.js"></script>
   <script src="js/map-location.js"></script>
   <script src="js/webcams.js"></script>
+  <script src="js/map-tools.js"></script>
   <script src="js/globe.js"></script>
   <script src="js/interface-hud.js"></script>
 </body>

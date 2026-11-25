@@ -39,6 +39,7 @@
       if (!response.ok) throw new Error(result.error || "Consulta marítima indisponível.");
       if (request !== controller || map !== current) return;
       map.getSource("vessels").setData(result);
+      document.dispatchEvent(new CustomEvent("jarvis:entities-updated",{detail:{kind:"vessel",features:result.features}}));
       const count = result.features.length;
       status.textContent = count
         ? count + " navios · AISStream · amostra de 12 s · " +
@@ -106,6 +107,7 @@
     map.on("click", "vessels", event => {
       const feature = event.features[0];
       const p = feature.properties;
+      document.dispatchEvent(new CustomEvent("jarvis:entity-selected",{detail:{kind:"vessel",id:String(p.mmsi),name:p.name||String(p.mmsi),coordinates:feature.geometry.coordinates,observedAt:Date.parse(p.receivedAt)}}));
       const detail = document.createElement("div");
       const heading = document.createElement("strong");
       heading.textContent = p.name || "Embarcação";
