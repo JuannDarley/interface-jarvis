@@ -3,9 +3,10 @@
 /* ==========================================================================
        INICIALIZAÇÃO & FLUXO DE TELAS (BOOT -> ATIVAÇÃO -> APP)
        ========================================================================== */
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
       // O boot visual não depende de API, microfone ou TTS.
       // Assim, uma falha de inicialização não prende a interface no boot.
+      await window.JarvisNotesIdentity?.ready;
       try { loadNotes(); } catch (e) { console.error("JARVIS boot: notas:", e); }
       try { initSpeechRecognition(); } catch (e) { console.error("JARVIS boot: STT:", e); }
       updateServiceStatus();

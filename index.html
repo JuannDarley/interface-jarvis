@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="css/agenda.css">
   <link rel="stylesheet" href="css/personal-tools.css">
   <link rel="stylesheet" href="css/map-tools.css">
+  <link rel="stylesheet" href="css/conversation.css">
 
 </head>
 <body>
@@ -90,6 +91,8 @@
         <span>MAPA GLOBAL</span>
       </a>
       <nav class="personal-tools-nav" aria-label="Ferramentas pessoais">
+      <button id="open-enrollment" type="button" hidden>CADASTRAR PESSOA</button>
+      <button id="open-daily" type="button" aria-haspopup="dialog">RESUMO DO DIA</button>
       <button id="open-agenda" type="button" aria-haspopup="dialog">AGENDA</button>
       <button id="open-planning" type="button" aria-haspopup="dialog">TAREFAS &amp; METAS</button>
       <button id="open-account" type="button" aria-haspopup="dialog">MEU PERFIL</button>
@@ -142,6 +145,8 @@
           <p id="context-sources" role="status"></p>
         </div>
       </div>
+      <section id="command-preview" class="command-preview" hidden aria-labelledby="command-title"><header><div><small>CONFIRA ANTES DE SALVAR</small><h3 id="command-title"></h3></div><span id="command-kind"></span></header><ul id="command-details"></ul><p id="command-status" role="status"></p><div class="command-buttons"><button id="command-confirm" type="button">CONFIRMAR AÇÃO</button><button id="command-cancel" type="button">DESCARTAR PRÉVIA</button></div><small>A prévia expira em 5 minutos. Mudanças em outro dispositivo exigem uma nova revisão. Confirme pelo botão; a voz apenas prepara a ação.</small></section>
+
 
       <!-- Barra de Controle de Comandos -->
       <div class="controls-bar">
@@ -573,7 +578,11 @@
 
   <dialog id="backup-dialog" class="personal-dialog" aria-labelledby="backup-title"><header><div><small>PROTEÇÃO DOS SEUS DADOS</small><h2 id="backup-title">Backup & restauração</h2></div><button id="backup-close" type="button" aria-label="Fechar backup">✕</button></header><p>Backup completo do banco local: notas, perfil, imagens, histórico, tarefas e agenda. A verificação restaura uma cópia isolada e mantém o banco em uso intacto.</p><p id="backup-status" role="status">Carregando…</p><dl id="backup-details"></dl><div class="personal-actions"><button id="backup-run" type="button">FAZER BACKUP AGORA</button><button id="backup-verify" type="button">TESTAR RESTAURAÇÃO</button><button id="backup-recover" type="button">CRIAR CÓPIA DE RECUPERAÇÃO</button><button id="backup-refresh" type="button">ATUALIZAR STATUS</button></div><p>O backup automático é diário, enquanto o Mac e o Docker estiverem disponíveis. Se houver falha, ela aparecerá aqui. Nenhuma cópia antiga é apagada automaticamente.</p><p>A recuperação definitiva é feita primeiro em um banco separado. O banco atual nunca é substituído por este painel. Os arquivos ficam no Mac; uma cópia externa continua necessária para proteger contra perda do computador.</p></dialog>
 
+  <dialog id="enrollment-dialog" class="personal-dialog" aria-labelledby="enrollment-title"><header><div><small>CADASTRO FACIAL PRIVADO</small><h2 id="enrollment-title">Cadastrar pessoa</h2></div><button id="enrollment-close" type="button" aria-label="Fechar cadastro">✕</button></header><p>A pessoa terá um perfil próprio, com notas e tarefas separadas. Posicione somente o rosto dela na câmera. A foto e a assinatura facial serão armazenadas no banco do JARVIS.</p><label>Nome de exibição<input id="enrollment-name" maxlength="120" autocomplete="off"></label><label>Câmera<select id="enrollment-source"><option value="server">Câmera do Mac que executa o JARVIS</option><option value="device">Câmera deste dispositivo</option></select></label><div class="enrollment-camera"><video id="enrollment-video" autoplay playsinline muted hidden></video><img id="enrollment-preview" alt="Prévia da câmera do Mac" hidden></div><p id="enrollment-status" role="status">Abra a câmera para preparar o cadastro.</p><button id="enrollment-start" type="button">ABRIR CÂMERA</button> <button id="enrollment-capture" type="button" disabled>CAPTURAR 5 AMOSTRAS</button> <button id="enrollment-save" type="button" disabled>CONFIRMAR CADASTRO</button><p>Este cadastro não troca sua sessão atual. Para entrar como a nova pessoa, encerre a sessão e faça o reconhecimento facial novamente.</p></dialog>
+  <dialog id="daily-dialog" class="personal-dialog daily-dialog" aria-labelledby="daily-title"><header><div><small>AGENDA + TAREFAS / SEM ENVIO À IA</small><h2 id="daily-title">Resumo do dia</h2></div><button id="daily-close" type="button" aria-label="Fechar resumo">✕</button></header><form id="daily-form"><label>Data<input id="daily-date" type="date" required min="2000-01-01" max="2099-12-31"></label><button type="submit">ATUALIZAR RESUMO</button><button id="daily-today" type="button">HOJE</button></form><p id="daily-status" role="status">Carregando…</p><div id="daily-counts" class="daily-counts"></div><section><h3>Compromissos</h3><div id="daily-events"></div><button id="daily-open-agenda" type="button">ABRIR AGENDA</button></section><section><h3>Tarefas com prazo no dia</h3><div id="daily-due"></div></section><section><h3>Pendências atrasadas</h3><div id="daily-overdue"></div><button id="daily-open-tasks" type="button">ABRIR TAREFAS &amp; METAS</button></section><p id="daily-unscheduled"></p><label><input id="daily-auto" type="checkbox"> Mostrar o resumo uma vez por dia ao abrir o painel neste dispositivo</label><p>O resumo consulta os dados salvos e não cria compromissos. Eventos cancelados são omitidos. Tarefas concluídas são contadas pelo prazo, não pela data de conclusão.</p></dialog>
+
   <script src="js/state.js"></script>
+  <script src="js/notes-identity.js"></script>
   <script src="js/brain.js"></script>
   <script src="js/notes-sync.js"></script>
   <script src="js/voice.js"></script>
@@ -584,6 +593,9 @@
   <script src="js/memory.js"></script>
   <script src="js/search.js"></script>
   <script src="js/backup.js"></script>
+  <script src="js/daily-summary.js"></script>
+  <script src="js/commands.js"></script>
+  <script src="js/enrollment.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>
   <script src="js/face-mode.js"></script>

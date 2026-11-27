@@ -7,19 +7,22 @@
        O frontend não envia Authorization nem acessa a GROQ_API_KEY.
        ========================================================================== */
     async function processUserCommand(commandText) {
+      if(window.JarvisCommands?.pending && /^(sim|confirmo|confirmar|confirme|não|nao|desisto|cancelar)[.!]?$/i.test(commandText.trim())){showToast("Use os botões CONFIRMAR ou DESCARTAR na prévia.");return;}
+      if(window.JarvisCommands&&!window.JarvisCommands.begin()){showToast("Aguarde a confirmação atual antes de enviar outro comando.");return;}
       isBusy = true;
       setOrbState("thinking");
       setHudStatus("PROCESSANDO...", "#eab308");
 
       // Registra mensagem do usuário no histórico da sessão
-      sessionHistory.push({ role: "user", content: commandText });
+      const userEntry={role:"user",content:commandText};
+      // Only successful AI turns enter the provider history. Local commands stay private.
 
       try {
         const weatherReply = window.JarvisWeather
           ? await window.JarvisWeather.answerIfRequested(commandText)
           : null;
         if (weatherReply) {
-          sessionHistory.push({ role: "assistant", content: weatherReply });
+          // Weather is a local tool result, not automatic context for the language model.
           window.JarvisAccount?.recordTurn(commandText, weatherReply);
           setDialogueText(null, weatherReply);
           setHudStatus("ONLINE", "#10b981");
@@ -42,7 +45,8 @@
           },
           body: JSON.stringify({
             message: commandText,
-            history: sessionHistory.slice(0, -1).slice(-10),
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            history: sessionHistory.slice(-10),
             ...(await window.JarvisMemory.payload())
           })
         });
@@ -60,6 +64,7 @@
           return;
         }
 
+        if(data.command?.handled){const index=sessionHistory.indexOf(userEntry);if(index>=0)sessionHistory.splice(index,1);window.JarvisCommands.receive(data.command);window.JarvisAccount?.recordTurn(commandText,data.response);setDialogueText(null,data.response);setHudStatus("ONLINE", "#10b981");setOrbState("idle");speakText("O resultado está no painel do JARVIS. Confira os detalhes e, se houver uma ação, use os botões para confirmar ou descartar.");return;}
         window.JarvisMemory?.used(data.sources);
         const rawReply = data.response || "";
 
@@ -83,7 +88,7 @@
           cleanReply = rawReply.replace(saveRegex, "").trim();
         }
 
-        if(memoryGeneration===window.JarvisMemory.version())sessionHistory.push({ role: "assistant", content: cleanReply });
+        if(memoryGeneration===window.JarvisMemory.version())sessionHistory.push(userEntry,{ role: "assistant", content: cleanReply });
         window.JarvisAccount?.recordTurn(commandText, cleanReply);
 
         setDialogueText(null, cleanReply);

@@ -1,6 +1,7 @@
 /* Sincronização com o mesmo servidor e a mesma sessão do desbloqueio facial. */
 window.JarvisNotes = (() => {
-  const key = `jarvis_notes_sync:${window.location.origin}`;
+  let key = `jarvis_notes_sync:${window.location.origin}`;
+  const scoped=base=>window.JarvisNotesIdentity?window.JarvisNotesIdentity.key(base):base;
   let revision = null, baseline = null, busy = false, ready = false, queued = false, conflict = null;
   let timer;
   const status = () => document.getElementById('notes-sync-status');
@@ -13,10 +14,10 @@ window.JarvisNotes = (() => {
     try {
     const entry = { createdAt: new Date().toISOString(), reason, origin: window.location.origin,
       revision, notes: JSON.parse(JSON.stringify(notes)) };
-    if (!localStorage.getItem('jarvis_notes_before_database_sync')) {
-      localStorage.setItem('jarvis_notes_before_database_sync', JSON.stringify(entry));
+    if (!localStorage.getItem(scoped('jarvis_notes_before_database_sync'))) {
+      localStorage.setItem(scoped('jarvis_notes_before_database_sync'), JSON.stringify(entry));
     }
-    const archiveKey = 'jarvis_notes_backups_v1';
+    const archiveKey = scoped('jarvis_notes_backups_v1');
     let archive;
     try { archive = JSON.parse(localStorage.getItem(archiveKey) || '[]'); } catch (_) { archive = []; }
     if (!Array.isArray(archive)) archive = [];
@@ -34,7 +35,7 @@ window.JarvisNotes = (() => {
   async function request(method, body) {
     const response = await fetch(`${window.JARVIS_API_BASE_URL}/api/notes`, {
       method, credentials: 'same-origin', cache: 'no-store',
-      headers: body ? { 'Content-Type': 'application/json' } : {},
+      headers: {...(window.JarvisNotesIdentity?.owner?{'X-Jarvis-Owner':window.JarvisNotesIdentity.owner}:{}),...(body?{'Content-Type':'application/json'}:{})},
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(10000)
     });
@@ -46,7 +47,7 @@ window.JarvisNotes = (() => {
     backup('before-server-apply');
     currentNotes = document.notes;
     revision = document.revision;
-    localStorage.setItem('jarvis_notes', snapshot());
+    localStorage.setItem(scoped('jarvis_notes'), snapshot());
     remember();
     updateBrainStats();
     renderGraph();
@@ -83,12 +84,13 @@ window.JarvisNotes = (() => {
     if (busy) return;
     busy = true;
     status().textContent = 'Conectando notas...';
+    if(window.JarvisNotesIdentity){await window.JarvisNotesIdentity.ready;if(!window.JarvisNotesIdentity.owner){busy=false;ready=false;status().textContent="Entre novamente para acessar suas notas. As cópias locais foram preservadas.";return;}key=window.JarvisNotesIdentity.key("jarvis_notes_sync");}
     try {
       backup('before-synchronize');
       const remote = await request('GET');
       if (!Array.isArray(remote.notes) || !Number.isInteger(remote.revision)) throw new Error('invalid-notes');
       const stored = JSON.parse(localStorage.getItem(key) || 'null');
-      const unchanged = stored ? snapshot() === stored.baseline : snapshot() === JSON.stringify(INITIAL_NOTES);
+      const unchanged = stored ? snapshot() === stored.baseline : (snapshot() === JSON.stringify(INITIAL_NOTES) || snapshot() === "[]");
       revision = remote.revision;
       ready = true;
       if (!remote.initialized) {
@@ -124,14 +126,14 @@ window.JarvisNotes = (() => {
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('notes-sync-button').addEventListener('click', synchronize);
     document.getElementById('notes-use-server').addEventListener('click', () => {
-      localStorage.setItem('jarvis_notes_local_backup', snapshot());
+      localStorage.setItem(scoped('jarvis_notes_local_backup'), snapshot());
       apply(conflict);
       conflict = null;
       dialog().close();
     });
     document.getElementById('notes-use-local').addEventListener('click', () => {
       backup('server-conflict-version', conflict.notes);
-      localStorage.setItem('jarvis_notes_server_backup', JSON.stringify(conflict));
+      localStorage.setItem(scoped('jarvis_notes_server_backup'), JSON.stringify(conflict));
       revision = conflict.revision;
       conflict = null;
       dialog().close();

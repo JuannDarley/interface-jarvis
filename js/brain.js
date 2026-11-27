@@ -4,7 +4,9 @@
        NOTAS & PERSISTÊNCIA (SECOND BRAIN)
        ========================================================================== */
     function loadNotes() {
-      const stored = localStorage.getItem("jarvis_notes");
+      const storageKey=window.JarvisNotesIdentity?.key("jarvis_notes");
+      if(!storageKey){currentNotes=[];return;}
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         try {
           currentNotes = JSON.parse(stored);
@@ -18,7 +20,9 @@
     }
 
     function saveNotesToStorage() {
-      localStorage.setItem("jarvis_notes", JSON.stringify(currentNotes));
+      const storageKey=window.JarvisNotesIdentity?.key("jarvis_notes");
+      if(!storageKey){showToast("Confirme sua identidade antes de salvar notas neste dispositivo.");return;}
+      localStorage.setItem(storageKey, JSON.stringify(currentNotes));
       window.JarvisNotes?.changed();
       updateBrainStats();
     }
